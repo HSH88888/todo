@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>사용자 관리 스케줄러 Fixed</title>
+    <title>Todo Master 24H (Fixed)</title>
     <style>
         :root {
             --primary-color: #007aff;
             --bg-color: #f2f2f7;
             --box-bg: #ffffff;
             --text-color: #1c1c1e;
-            --danger-color: #ff3b30;
         }
 
         body {
@@ -22,7 +21,7 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
-            user-select: none; /* 텍스트 선택 방지 */
+            user-select: none;
         }
 
         .app-container {
@@ -35,71 +34,49 @@
             position: relative;
         }
 
-        /* --- 헤더 영역 --- */
+        /* --- 헤더 --- */
         .header {
             padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fff;
-            border-bottom: 1px solid #e5e5ea;
-            z-index: 10;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff; border-bottom: 1px solid #e5e5ea; z-index: 10;
         }
         .app-title { font-size: 18px; font-weight: 800; }
-        
-        /* 사용자 버튼 스타일 */
         .user-btn {
-            background: #eef1f5;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--primary-color);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: background 0.2s;
+            background: #eef1f5; padding: 8px 12px; border-radius: 20px;
+            font-size: 14px; font-weight: 600; color: var(--primary-color);
+            cursor: pointer; display: flex; align-items: center; gap: 5px;
         }
-        .user-btn:active { background: #dce1e8; }
-        .user-status-dot {
-            width: 8px; height: 8px; background: #ccc; border-radius: 50%;
-        }
-        .user-status-dot.active { background: #34c759; } /* 로그인 시 녹색 */
+        .user-status-dot { width: 8px; height: 8px; background: #ccc; border-radius: 50%; }
+        .user-status-dot.active { background: #34c759; }
 
-        /* --- 메인 콘텐츠 (다이얼 & 리스트) --- */
+        /* --- 메인 화면 --- */
         .date-picker-area {
-            height: 150px;
-            background: #fff;
-            position: relative;
-            overflow: hidden;
-            border-bottom: 1px solid #e5e5ea;
-            perspective: 1000px;
+            height: 140px; background: #fff; position: relative; overflow: hidden;
+            border-bottom: 1px solid #e5e5ea; perspective: 1000px;
         }
         .wheel-container {
             height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
-            padding: 55px 0; scrollbar-width: none;
+            padding: 50px 0; scrollbar-width: none;
         }
         .wheel-container::-webkit-scrollbar { display: none; }
-        
         .wheel-item {
             height: 40px; display: flex; justify-content: center; align-items: center;
             font-size: 18px; color: #aaa; scroll-snap-align: center;
             transform-origin: center center; transition: all 0.1s;
         }
 
-        .schedule-list { flex: 1; overflow-y: auto; background: #fff; position: relative; }
+        .schedule-list { flex: 1; overflow-y: auto; background: #fff; }
+        .time-slot { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f2f2f7; cursor: pointer; }
+        .time-slot:active { background: #f9f9f9; }
         
-        .time-slot {
-            display: flex; align-items: center; padding: 16px 20px;
-            border-bottom: 1px solid #f2f2f7; cursor: pointer;
+        .time-label { 
+            width: 60px; font-weight: 700; color: #333; font-size: 16px; 
+            font-variant-numeric: tabular-nums;
         }
-        .time-slot:active { background-color: #f9f9f9; }
-        .time-label { width: 50px; font-weight: 600; color: #333; }
         .task-content { flex: 1; color: #c7c7cc; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .task-content.filled { color: #000; }
 
-        /* --- 공통 모달 --- */
+        /* --- 모달 --- */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 100;
@@ -107,49 +84,76 @@
         }
         .modal-box {
             background: #fff; border-radius: 20px; width: 85%; max-width: 320px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden;
             display: flex; flex-direction: column; animation: popUp 0.2s ease-out;
         }
-        @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .modal-header { padding: 15px; text-align: center; font-weight: 700; font-size: 17px; border-bottom: 1px solid #eee; }
+        @keyframes popUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
-        /* 할일 입력 모달 전용 */
-        .task-wheel-area { height: 140px; background: #f9f9f9; overflow: hidden; position: relative; perspective: 800px; }
-        .detail-input-area { padding: 15px; background: #fff; }
+        /* 시간 설정 영역 */
+        .time-setter-area {
+            background: #f8f8f8; padding: 15px; border-bottom: 1px solid #eee;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .time-setter-title { font-size: 14px; color: #888; margin-bottom: 5px; }
+        .time-display { 
+            font-size: 28px; font-weight: 800; color: #333; 
+            display: flex; align-items: center; gap: 5px;
+        }
+        
+        /* 분 선택 휠 */
+        .minute-wheel-wrapper {
+            width: 100%; height: 60px; overflow-x: scroll; white-space: nowrap;
+            margin-top: 10px; scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+            border-top: 1px solid #eee; border-bottom: 1px solid #eee;
+            background: #fff; display: flex; align-items: center;
+            position: relative;
+        }
+        /* 중앙 선택선 */
+        .minute-wheel-wrapper::after {
+            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+            background: var(--primary-color); transform: translateX(-50%); opacity: 0.3; pointer-events: none;
+        }
+
+        .minute-wheel-wrapper::-webkit-scrollbar { display: none; }
+        .min-item {
+            display: inline-block; width: 50px; height: 50px; line-height: 50px;
+            text-align: center; scroll-snap-align: center; font-size: 18px; color: #ccc;
+            flex-shrink: 0; transition: all 0.2s;
+        }
+        .min-item.active { color: var(--primary-color); font-weight: bold; font-size: 24px; transform: scale(1.1); }
+
+        /* 할일 프리셋 */
+        .task-preset-area { height: 120px; position: relative; overflow: hidden; perspective: 800px; background: #fff; }
+        
+        /* 입력창 */
+        .input-row { 
+            padding: 15px; background: #fff; border-top: 1px solid #eee; 
+            display: flex; align-items: center; gap: 8px; position: relative;
+        }
         .modal-input {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
-            font-size: 16px; box-sizing: border-box; outline: none; background: #f5f5f7;
+            flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
+            font-size: 16px; outline: none; background: #f5f5f7;
         }
-        .modal-input:focus { background: #fff; border-color: var(--primary-color); }
-        
+        .emoji-btn {
+            font-size: 24px; cursor: pointer; padding: 5px; 
+            border-radius: 50%; transition: background 0.2s;
+        }
+        .emoji-picker {
+            display: none; grid-template-columns: repeat(6, 1fr); gap: 10px;
+            padding: 15px; background: #f9f9f9; max-height: 150px; overflow-y: auto;
+            border-top: 1px solid #eee;
+        }
+        .emoji-item { font-size: 22px; text-align: center; cursor: pointer; }
+
         .modal-buttons { display: flex; border-top: 1px solid #eee; }
-        .modal-btn { flex: 1; padding: 15px; border: none; background: #fff; font-size: 16px; cursor: pointer; }
-        .modal-btn:active { background: #f2f2f7; }
-        .modal-btn.primary { color: var(--primary-color); font-weight: 700; }
-        .modal-btn.danger { color: var(--danger-color); }
-
-        /* 사용자 관리 모달 전용 */
-        .user-list-area { padding: 15px; max-height: 200px; overflow-y: auto; background: #fafafa; border-bottom: 1px solid #eee; }
-        .user-list-label { font-size: 12px; color: #888; margin-bottom: 8px; display: block; }
-        .user-chip {
-            display: inline-block; padding: 6px 12px; background: #fff; border: 1px solid #ddd;
-            border-radius: 15px; margin: 0 5px 5px 0; font-size: 14px; cursor: pointer;
-        }
-        .user-chip:active { background: #eee; }
-        .user-chip.current { border-color: var(--primary-color); color: var(--primary-color); font-weight: bold; background: #eef6ff; }
+        .modal-btn { flex: 1; padding: 15px; border: none; background: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .modal-btn.save { color: var(--primary-color); }
         
-        .login-input-area { padding: 20px; }
-        .login-btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-full { width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer; }
-        .btn-blue { background: var(--primary-color); color: white; font-weight: bold; }
-        .btn-logout { background: #eee; color: #333; }
-
-        /* 선택 하이라이트 바 */
-        .highlight-bar {
-            position: absolute; top: 50%; left: 0; right: 0; height: 36px; margin-top: -18px;
-            background: rgba(0,0,0,0.03); pointer-events: none; z-index: 1;
-        }
+        .highlight-bar { position: absolute; top: 50%; left: 0; right: 0; height: 36px; margin-top: -18px; background: rgba(0,0,0,0.03); pointer-events: none; z-index: 1; }
+        .user-list-area { padding: 15px; background:#fafafa; }
+        .user-chip { display:inline-block; padding:5px 10px; margin:3px; background:#fff; border:1px solid #ddd; border-radius:15px; cursor:pointer;}
+        .user-chip.current { border-color:var(--primary-color); color:var(--primary-color); background:#eef6ff; font-weight:bold;}
 
     </style>
 </head>
@@ -157,7 +161,7 @@
 
 <div class="app-container">
     <div class="header">
-        <div class="app-title">Dial Todo</div>
+        <div class="app-title">Todo 24H</div>
         <div class="user-btn" onclick="openUserModal()">
             <div class="user-status-dot" id="userStatusDot"></div>
             <span id="headerUserName">Guest</span>
@@ -169,357 +173,351 @@
         <div class="wheel-container" id="dateWheel"></div>
     </div>
 
-    <div class="schedule-list" id="scheduleList">
-        </div>
+    <div class="schedule-list" id="scheduleList"></div>
 </div>
 
 <div class="modal-overlay" id="taskModal">
     <div class="modal-box">
-        <div class="modal-header" id="taskModalTitle">00:00 일정</div>
+        <div class="time-setter-area">
+            <div class="time-setter-title">시간 설정</div>
+            <div class="time-display">
+                <span id="displayHour">00</span>
+                <span>:</span>
+                <span id="displayMin" style="color:var(--primary-color)">00</span>
+            </div>
+            <div class="minute-wheel-wrapper" id="minuteWheel"></div>
+        </div>
         
-        <div class="task-wheel-area">
+        <div class="task-preset-area">
             <div class="highlight-bar"></div>
             <div class="wheel-container" id="presetWheel"></div>
         </div>
 
-        <div class="detail-input-area">
-            <input type="text" class="modal-input" id="taskInput" placeholder="직접 입력하거나 위에서 선택" autocomplete="off">
+        <div class="input-row">
+            <input type="text" class="modal-input" id="taskInput" placeholder="내용 입력" autocomplete="off">
+            <div class="emoji-btn" onclick="toggleEmojiPicker()">☺</div>
         </div>
+        
+        <div class="emoji-picker" id="emojiPicker"></div>
 
         <div class="modal-buttons">
             <button class="modal-btn" onclick="closeTaskModal()">취소</button>
-            <button class="modal-btn primary" onclick="saveTask()">저장</button>
+            <button class="modal-btn save" onclick="saveTask()">저장</button>
         </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="userModal">
-    <div class="modal-box" style="max-width: 340px;">
-        <div class="modal-header">사용자 관리</div>
-        
-        <div class="user-list-area">
-            <span class="user-list-label">저장된 사용자 (클릭하여 전환)</span>
-            <div id="savedUserList">
-                </div>
-        </div>
-
-        <div class="login-input-area">
-            <input type="text" class="modal-input" id="loginIdInput" placeholder="새 사용자 이름 입력">
-            
-            <div class="login-btn-group">
-                <button class="btn-full btn-blue" onclick="handleLogin()">로그인 / 생성</button>
-            </div>
-            <div class="login-btn-group">
-                <button class="btn-full btn-logout" onclick="handleLogout()" id="logoutBtn" style="display:none;">로그아웃</button>
+    <div class="modal-box">
+        <div style="padding:15px; text-align:center; font-weight:bold; border-bottom:1px solid #eee;">사용자 관리</div>
+        <div class="user-list-area" id="savedUserList"></div>
+        <div style="padding:15px;">
+            <input type="text" class="modal-input" id="loginIdInput" placeholder="새 사용자 이름">
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="modal-btn save" style="background:var(--primary-color); color:#fff; border-radius:10px;" onclick="handleLogin()">로그인</button>
+                <button class="modal-btn" style="background:#eee; color:#333; border-radius:10px;" onclick="handleLogout()" id="logoutBtn">로그아웃</button>
             </div>
         </div>
-        
-        <div class="modal-buttons">
-            <button class="modal-btn" onclick="closeUserModal()">닫기</button>
-        </div>
+        <div class="modal-buttons"><button class="modal-btn" onclick="closeUserModal()">닫기</button></div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 설정 변수 ---
+    // 설정
     const START_HOUR = 8;
-    const END_HOUR = 22;
-    const PRESET_TASKS = ["(없음)", "회의", "업무", "외근", "식사", "휴식", "운동", "스터디", "약속", "이동", "보고", "점검"];
-    
-    // --- 상태 변수 ---
-    let currentUser = null; // null이면 Guest
-    let selectedDate = null;
-    let currentEditingTime = null;
-    let todos = {}; // 현재 로드된 할일 데이터
-    let userList = []; // 저장된 사용자 목록
+    const END_HOUR = 24; 
+    const PRESET_TASKS = ["(없음)", "회의", "업무", "식사", "운동", "휴식", "스터디", "외출", "이동", "취침", "점검", "보고"];
+    const EMOJIS = ["😀","😂","😍","👍","ok","🔥","✅","❤️","😭","🎉","✈️","💊","🏥","📅","⭐","☕","🍔","🍺"];
 
-    // --- DOM 요소 ---
+    let currentUser = null;
+    let selectedDate = null;
+    let editingHour = 0;
+    let editingMin = 0; // 현재 선택된 분 (상태값)
+    let todos = {}; 
+
     const dateWheel = document.getElementById('dateWheel');
     const scheduleList = document.getElementById('scheduleList');
+    const minuteWheel = document.getElementById('minuteWheel');
+    const emojiPicker = document.getElementById('emojiPicker');
     const taskInput = document.getElementById('taskInput');
-    const presetWheel = document.getElementById('presetWheel');
-    
-    // --- 초기화 실행 ---
-    loadUserList();     // 저장된 유저 목록 로드
-    checkLastSession(); // 마지막 로그인 정보 확인
-    initDateWheel();    // 날짜 휠 생성
-    initPresetWheel();  // 할일 프리셋 휠 생성
-    renderSchedule();   // 리스트 렌더링
 
-    // =========================================
-    // 1. 사용자 관리 시스템 (로그인/로그아웃/목록)
-    // =========================================
-    
-    function loadUserList() {
-        try {
-            const list = localStorage.getItem('app_user_list');
-            userList = list ? JSON.parse(list) : [];
-        } catch(e) { userList = []; }
+    // 초기화
+    initData();
+    initDateWheel();
+    initPresetWheel();
+    initMinuteWheel();
+    initEmojiPicker();
+
+    function initData() {
+        const list = localStorage.getItem('app_user_list');
+        const last = localStorage.getItem('app_last_user');
+        if(last && list && list.includes(last)) switchUser(last);
+        else switchUser(null);
     }
 
-    function saveUserList() {
-        localStorage.setItem('app_user_list', JSON.stringify(userList));
-    }
-
-    function checkLastSession() {
-        const lastUser = localStorage.getItem('app_last_user');
-        if (lastUser && userList.includes(lastUser)) {
-            switchUser(lastUser);
-        } else {
-            switchUser(null); // Guest 모드
-        }
-    }
-
-    // 사용자 전환 (핵심 로직)
-    function switchUser(userId) {
-        currentUser = userId;
-        
-        // UI 업데이트
-        const nameDisplay = userId ? userId : "Guest (비로그인)";
-        document.getElementById('headerUserName').textContent = nameDisplay;
-        
-        const dot = document.getElementById('userStatusDot');
-        const logoutBtn = document.getElementById('logoutBtn');
-        
-        if (userId) {
-            dot.classList.add('active');
-            logoutBtn.style.display = 'block';
-            // 데이터 로드
-            const storedData = localStorage.getItem(`todo_data_${userId}`);
-            todos = storedData ? JSON.parse(storedData) : {};
-        } else {
-            dot.classList.remove('active');
-            logoutBtn.style.display = 'none';
-            todos = {}; // 게스트는 빈 상태로 시작 (원하면 localStorage로 유지 가능)
-        }
-        
-        // 마지막 로그인 기록
-        if(userId) localStorage.setItem('app_last_user', userId);
-        else localStorage.removeItem('app_last_user');
-
-        renderSchedule(); // 화면 갱신
-        renderUserChips(); // 모달 칩 갱신
-    }
-
-    // 로그인 버튼 클릭 시
-    window.handleLogin = () => {
-        const input = document.getElementById('loginIdInput');
-        const name = input.value.trim();
-        
-        if (!name) return alert('이름을 입력해주세요.');
-        
-        if (!userList.includes(name)) {
-            userList.push(name);
-            saveUserList();
-        }
-        
-        switchUser(name);
-        input.value = ''; // 입력창 비우기
-        closeUserModal();
-    };
-
-    window.handleLogout = () => {
-        if(confirm("로그아웃 하시겠습니까?")) {
-            switchUser(null);
-            closeUserModal();
-        }
-    };
-
-    // 사용자 목록 칩 그리기
-    function renderUserChips() {
-        const container = document.getElementById('savedUserList');
-        container.innerHTML = '';
-        
-        if (userList.length === 0) {
-            container.innerHTML = '<span style="font-size:13px; color:#aaa;">저장된 사용자가 없습니다.</span>';
-            return;
-        }
-
-        userList.forEach(user => {
-            const chip = document.createElement('span');
-            chip.className = `user-chip ${user === currentUser ? 'current' : ''}`;
-            chip.textContent = user;
-            chip.onclick = () => {
-                switchUser(user);
-                closeUserModal(); // 선택하면 바로 창 닫기
-            };
-            container.appendChild(chip);
-        });
-    }
-
-    window.openUserModal = () => {
-        renderUserChips();
-        document.getElementById('userModal').style.display = 'flex';
-        document.getElementById('loginIdInput').focus();
-    };
-    window.closeUserModal = () => document.getElementById('userModal').style.display = 'none';
-
-
-    // =========================================
-    // 2. 다이얼(Wheel) 로직 (날짜 & 프리셋)
-    // =========================================
-
-    function createWheel(element, items, onSelect) {
-        element.innerHTML = '';
-        items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'wheel-item';
-            div.textContent = item.label; // 표시 텍스트
-            div.dataset.value = item.value; // 실제 값
-            div.onclick = () => div.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.appendChild(div);
-        });
-
-        const updateVisuals = () => {
-            const center = element.scrollTop + element.offsetHeight / 2;
-            let closest = null;
-            let minDiff = Infinity;
-
-            Array.from(element.children).forEach(child => {
-                const centerChild = child.offsetTop + child.offsetHeight / 2;
-                const dist = center - centerChild;
-                const absDist = Math.abs(dist);
-                
-                // 3D 효과 계산
-                const angle = dist / 10;
-                const scale = Math.max(0.8, 1 - (absDist / 1000));
-                const opacity = Math.max(0.3, 1 - (absDist / 150));
-                
-                child.style.transform = `rotateX(${-angle}deg) scale(${scale})`;
-                child.style.opacity = opacity;
-                
-                if (absDist < 20) {
-                    child.style.color = "#000"; child.style.fontWeight = "bold";
-                } else {
-                    child.style.color = "#ccc"; child.style.fontWeight = "normal";
-                }
-
-                if (absDist < minDiff) { minDiff = absDist; closest = child; }
-            });
-            return closest;
-        };
-
-        let isScrolling;
-        element.addEventListener('scroll', () => {
-            requestAnimationFrame(updateVisuals);
-            clearTimeout(isScrolling);
-            isScrolling = setTimeout(() => {
-                const selected = updateVisuals();
-                if (selected && onSelect) {
-                    selected.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    onSelect(selected.dataset.value);
-                }
-            }, 100);
-        });
-
-        // 초기 로드 시 시각 효과 적용
-        setTimeout(updateVisuals, 100);
-    }
-
+    // --- 1. 메인 로직 ---
     function initDateWheel() {
+        dateWheel.innerHTML = '';
         const today = new Date();
-        const items = [];
         for (let i = -10; i <= 30; i++) {
             const d = new Date(); d.setDate(today.getDate() + i);
             const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
             const dw = ['일','월','화','수','목','금','토'][d.getDay()];
-            items.push({ label: `${m}.${day} (${dw})`, value: `${y}-${m}-${day}` });
+            
+            const div = document.createElement('div');
+            div.className = 'wheel-item';
+            div.textContent = `${m}.${day} (${dw})`;
+            div.dataset.value = `${y}-${m}-${day}`;
+            div.onclick = () => div.scrollIntoView({behavior:'smooth', block:'center'});
+            dateWheel.appendChild(div);
+            if(i === 0) selectedDate = div.dataset.value;
         }
-        
-        createWheel(dateWheel, items, (val) => {
+
+        setupVerticalWheel(dateWheel, (val) => {
             selectedDate = val;
             renderSchedule();
         });
-
-        // 오늘 날짜 자동 선택
-        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-        selectedDate = todayStr;
         
         setTimeout(() => {
-            // 오늘 날짜 찾아서 스크롤
-            const target = Array.from(dateWheel.children).find(c => c.dataset.value === todayStr);
-            if(target) target.scrollIntoView({ block:'center' });
+            const t = Array.from(dateWheel.children).find(c => c.dataset.value === selectedDate);
+            if(t) t.scrollIntoView({block:'center'});
         }, 200);
     }
 
-    function initPresetWheel() {
-        const items = PRESET_TASKS.map(t => ({ label: t, value: t }));
-        createWheel(presetWheel, items, (val) => {
-            // **수정된 로직**: 휠을 돌리면 입력창에 값이 자동으로 들어감
-            if (val === "(없음)") {
-                taskInput.value = "";
-            } else {
-                taskInput.value = val;
-            }
-        });
-    }
-
-    // =========================================
-    // 3. 스케줄 및 저장 로직 (버그 수정됨)
-    // =========================================
-
     function renderSchedule() {
         scheduleList.innerHTML = '';
-        if (!selectedDate) return;
+        if(!selectedDate) return;
 
-        for (let h = START_HOUR; h <= END_HOUR; h++) {
+        for(let h = START_HOUR; h <= END_HOUR; h++) {
             const key = `${selectedDate}-${h}`;
-            const task = todos[key] || '';
+            let data = todos[key];
+            let text = ""; let min = "00";
             
+            if (typeof data === 'string') { text = data; } 
+            else if (data) { text = data.text; min = String(data.min).padStart(2, '0'); }
+
             const div = document.createElement('div');
             div.className = 'time-slot';
-            div.onclick = () => openTaskModal(h, task);
-            
+            div.onclick = () => openTaskModal(h, min, text);
+
             div.innerHTML = `
-                <div class="time-label">${h}:00</div>
-                <div class="task-content ${task ? 'filled' : ''}">
-                    ${task || '터치하여 입력'}
-                </div>
+                <div class="time-label">${h}:${min}</div>
+                <div class="task-content ${text ? 'filled' : ''}">${text || '터치하여 입력'}</div>
             `;
             scheduleList.appendChild(div);
         }
     }
 
-    window.openTaskModal = (h, currentTask) => {
-        currentEditingTime = h;
-        document.getElementById('taskModalTitle').textContent = `${h}:00 일정 입력`;
-        taskInput.value = currentTask; // 기존 값 입력창에 세팅
+    // --- 2. 입력 모달 (분 선택 수정됨) ---
+    function initMinuteWheel() {
+        minuteWheel.innerHTML = '';
+        // 휠 중앙 정렬을 위한 패딩 (화면 너비의 50% - 아이템 절반)
+        const pad = document.createElement('div'); 
+        pad.style.width = "calc(50% - 25px)"; 
+        pad.style.flexShrink="0";
+        minuteWheel.appendChild(pad.cloneNode(true)); // 앞 패딩
+
+        for (let i = 0; i < 60; i++) {
+            const span = document.createElement('span');
+            span.className = 'min-item';
+            span.textContent = String(i).padStart(2,'0');
+            span.dataset.val = i;
+            span.onclick = () => {
+                span.scrollIntoView({behavior:'smooth', inline:'center'});
+                updateMinuteDisplay(i);
+            }
+            minuteWheel.appendChild(span);
+        }
+        
+        minuteWheel.appendChild(pad.cloneNode(true)); // 뒤 패딩
+
+        // 스크롤 이벤트 (시각적 업데이트용)
+        minuteWheel.addEventListener('scroll', () => {
+            requestAnimationFrame(() => {
+                const center = minuteWheel.scrollLeft + minuteWheel.offsetWidth / 2;
+                let closest = null; let minDiff = Infinity;
+                
+                document.querySelectorAll('.min-item').forEach(item => {
+                    const itemCenter = item.offsetLeft + item.offsetWidth / 2;
+                    const diff = Math.abs(center - itemCenter);
+                    if(diff < minDiff) { minDiff = diff; closest = item; }
+                    item.classList.remove('active');
+                });
+                
+                if(closest) {
+                    closest.classList.add('active');
+                    // 스크롤 중에도 상단 숫자는 바뀜 (저장 시에는 재계산하므로 안전)
+                    const val = parseInt(closest.dataset.val);
+                    document.getElementById('displayMin').textContent = String(val).padStart(2,'0');
+                }
+            });
+        });
+    }
+
+    function updateMinuteDisplay(m) {
+        editingMin = m;
+        document.getElementById('displayMin').textContent = String(m).padStart(2,'0');
+    }
+
+    // [중요] 저장 시점에 현재 선택된 분을 정확히 계산하는 함수
+    function getCurrentSelectedMinute() {
+        const center = minuteWheel.scrollLeft + minuteWheel.offsetWidth / 2;
+        let closest = null; let minDiff = Infinity;
+        document.querySelectorAll('.min-item').forEach(item => {
+            const itemCenter = item.offsetLeft + item.offsetWidth / 2;
+            const diff = Math.abs(center - itemCenter);
+            if(diff < minDiff) { minDiff = diff; closest = item; }
+        });
+        return closest ? parseInt(closest.dataset.val) : 0;
+    }
+
+    function initPresetWheel() {
+        const container = document.getElementById('presetWheel');
+        PRESET_TASKS.forEach(t => {
+            const d = document.createElement('div');
+            d.className = 'wheel-item'; d.textContent = t; d.dataset.val = t;
+            container.appendChild(d);
+            d.onclick = () => d.scrollIntoView({behavior:'smooth', block:'center'});
+        });
+        setupVerticalWheel(container, (val) => {
+            taskInput.value = (val === "(없음)") ? "" : val;
+        });
+    }
+
+    function initEmojiPicker() {
+        EMOJIS.forEach(e => {
+            const sp = document.createElement('div'); sp.className = 'emoji-item'; sp.textContent = e;
+            sp.onclick = () => { taskInput.value += e; taskInput.focus(); };
+            emojiPicker.appendChild(sp);
+        });
+    }
+    
+    window.toggleEmojiPicker = () => emojiPicker.style.display = (emojiPicker.style.display === 'grid') ? 'none' : 'grid';
+
+    window.openTaskModal = (h, mStr, text) => {
+        editingHour = h;
+        const initialMin = parseInt(mStr);
+        updateMinuteDisplay(initialMin);
+        
+        document.getElementById('displayHour').textContent = String(h).padStart(2,'0');
+        taskInput.value = text;
+        emojiPicker.style.display = 'none';
+
         document.getElementById('taskModal').style.display = 'flex';
-        taskInput.focus();
+        
+        // 휠 위치 동기화 (모달 렌더링 직후)
+        setTimeout(() => {
+            const target = document.querySelector(`.min-item[data-val="${initialMin}"]`);
+            if(target) target.scrollIntoView({inline:'center'});
+        }, 100);
     };
 
     window.closeTaskModal = () => document.getElementById('taskModal').style.display = 'none';
 
-    // **핵심 수정**: taskInput의 값만 믿고 저장함
     window.saveTask = () => {
-        if (!currentUser) {
-            if(!confirm("현재 'Guest' 상태입니다. 데이터가 브라우저에 임시로만 저장됩니다. 계속하시겠습니까?\n(로그인하면 안전하게 저장됩니다)")) {
-                return;
+        const val = taskInput.value.trim();
+        // 저장 버튼 누르는 순간, 휠 위치를 기반으로 '분'을 다시 계산 (동기화 오류 방지)
+        const finalMin = getCurrentSelectedMinute();
+        
+        const key = `${selectedDate}-${editingHour}`;
+        
+        if (val) {
+            todos[key] = { text: val, min: finalMin };
+        } else {
+            // 내용이 비었으면 삭제할지, 시간만 바꿀지 결정해야 함. 
+            // 여기서는 '내용이 없으면 저장 안 함'으로 처리 (오작동 방지)
+            if(todos[key]) {
+                if(confirm("내용을 비우면 일정이 삭제됩니다. 삭제하시겠습니까?")) delete todos[key];
+                else return; // 취소
+            } else {
+                 return alert("할일 내용을 입력해주세요.");
             }
         }
 
-        const val = taskInput.value.trim();
-        const key = `${selectedDate}-${currentEditingTime}`;
-        
-        if (val) {
-            todos[key] = val;
-        } else {
-            delete todos[key]; // 빈칸이면 삭제
-        }
-
-        // 데이터 저장
-        if (currentUser) {
-            localStorage.setItem(`todo_data_${currentUser}`, JSON.stringify(todos));
-        }
-        
+        if(currentUser) localStorage.setItem(`todo_data_${currentUser}`, JSON.stringify(todos));
         renderSchedule();
         closeTaskModal();
     };
-    
-    // 엔터키 저장
-    taskInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') saveTask(); });
 
+    // --- 3. 유틸 ---
+    function switchUser(id) {
+        currentUser = id;
+        document.getElementById('headerUserName').textContent = id ? id : "Guest";
+        document.getElementById('userStatusDot').classList.toggle('active', !!id);
+        document.getElementById('logoutBtn').style.display = id ? 'block' : 'none';
+        
+        if(id) {
+            const data = localStorage.getItem(`todo_data_${id}`);
+            todos = data ? JSON.parse(data) : {};
+            localStorage.setItem('app_last_user', id);
+        } else {
+            todos = {};
+            localStorage.removeItem('app_last_user');
+        }
+        renderSchedule();
+    }
+
+    function setupVerticalWheel(el, onSelect) {
+        const update = () => {
+            const center = el.scrollTop + el.offsetHeight / 2;
+            let closest = null; let minDiff = Infinity;
+            Array.from(el.children).forEach(c => {
+                const cCenter = c.offsetTop + c.offsetHeight / 2;
+                const dist = center - cCenter; const absDist = Math.abs(dist);
+                const angle = dist / 10;
+                const scale = Math.max(0.8, 1 - absDist/1000);
+                const opacity = Math.max(0.3, 1 - absDist/150);
+                c.style.transform = `rotateX(${-angle}deg) scale(${scale})`;
+                c.style.opacity = opacity;
+                c.style.color = (absDist < 20) ? "#000" : "#ccc";
+                c.style.fontWeight = (absDist < 20) ? "bold" : "normal";
+                if(absDist < minDiff) { minDiff = absDist; closest = c; }
+            });
+            return closest;
+        };
+        el.addEventListener('scroll', () => {
+            requestAnimationFrame(update);
+            clearTimeout(el.timer);
+            el.timer = setTimeout(() => {
+                const sel = update();
+                if(sel && onSelect) {
+                    sel.scrollIntoView({behavior:'smooth', block:'center'});
+                    onSelect(sel.dataset.value || sel.dataset.val);
+                }
+            }, 100);
+        });
+        setTimeout(update, 100);
+    }
+
+    window.openUserModal = () => {
+        const listDiv = document.getElementById('savedUserList'); listDiv.innerHTML = '';
+        const list = JSON.parse(localStorage.getItem('app_user_list') || '[]');
+        if(list.length===0) listDiv.innerHTML = '<span style="color:#aaa; font-size:13px;">없음</span>';
+        list.forEach(u => {
+            const chip = document.createElement('span');
+            chip.className = `user-chip ${u===currentUser?'current':''}`;
+            chip.textContent = u;
+            chip.onclick = () => { switchUser(u); closeUserModal(); };
+            listDiv.appendChild(chip);
+        });
+        document.getElementById('userModal').style.display = 'flex';
+    };
+    window.closeUserModal = () => document.getElementById('userModal').style.display = 'none';
+
+    window.handleLogin = () => {
+        const name = document.getElementById('loginIdInput').value.trim();
+        if(!name) return alert("이름 입력");
+        let list = JSON.parse(localStorage.getItem('app_user_list') || '[]');
+        if(!list.includes(name)) { list.push(name); localStorage.setItem('app_user_list', JSON.stringify(list)); }
+        switchUser(name);
+        document.getElementById('loginIdInput').value = '';
+        closeUserModal();
+    };
+
+    window.handleLogout = () => {
+        if(confirm("로그아웃?")) { switchUser(null); closeUserModal(); }
+    };
 });
 </script>
 </body>
