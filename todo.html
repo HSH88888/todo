@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D 다이얼 스케줄러</title>
+    <title>스마트 스케줄러</title>
     <style>
         :root {
-            --primary-color: #007aff; /* iOS Blue */
+            --primary-color: #007aff;
             --bg-color: #f2f2f7;
             --box-bg: #ffffff;
-            --text-color: #000;
+            --text-color: #1c1c1e;
+            --danger-color: #ff3b30;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             display: flex;
             justify-content: center;
             height: 100vh;
             overflow: hidden;
+            user-select: none;
         }
 
         .app-container {
@@ -32,200 +35,275 @@
             position: relative;
         }
 
-        /* --- 1. 3D 다이얼 영역 --- */
+        /* --- 상단 헤더 (설정 버튼 등) --- */
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            z-index: 10;
+        }
+        .app-title { font-size: 20px; font-weight: 800; }
+        .settings-btn { font-size: 24px; cursor: pointer; color: var(--primary-color); }
+
+        /* --- 3D 다이얼 영역 --- */
         .date-picker-area {
-            height: 200px; /* 높이 약간 증가 */
+            height: 180px;
             background: #fff;
             position: relative;
             overflow: hidden;
-            border-bottom: 1px solid #ccc;
-            /* 3D 원근감 부여 */
+            border-bottom: 1px solid #e5e5ea;
             perspective: 1000px; 
-            -webkit-perspective: 1000px;
         }
 
-        /* 그라데이션 마스크 (위아래 흐릿하게) */
+        /* 그라데이션 마스크 */
         .date-picker-area::before, .date-picker-area::after {
-            content: '';
-            position: absolute;
-            left: 0; right: 0;
-            height: 60px;
-            z-index: 2;
-            pointer-events: none;
+            content: ''; position: absolute; left: 0; right: 0; height: 50px; z-index: 2; pointer-events: none;
         }
-        .date-picker-area::before {
-            top: 0;
-            background: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0));
-        }
-        .date-picker-area::after {
-            bottom: 0;
-            background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
-        }
+        .date-picker-area::before { top: 0; background: linear-gradient(to bottom, #fff, transparent); }
+        .date-picker-area::after { bottom: 0; background: linear-gradient(to top, #fff, transparent); }
 
         .wheel-container {
-            height: 100%;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            padding-top: 80px; /* 중앙 정렬용 패딩 (높이/2 - 아이템높이/2) */
-            padding-bottom: 80px;
-            scrollbar-width: none;
+            height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
+            padding: 70px 0; scrollbar-width: none;
         }
         .wheel-container::-webkit-scrollbar { display: none; }
 
         .date-item {
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            color: #8e8e93;
-            scroll-snap-align: center;
-            cursor: pointer;
-            
-            /* 3D 변환의 중심축 설정 */
-            transform-origin: center center;
-            backface-visibility: hidden;
-            /* 부드러운 애니메이션 */
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out, color 0.1s;
+            height: 40px; display: flex; justify-content: center; align-items: center;
+            font-size: 18px; color: #8e8e93; scroll-snap-align: center; cursor: pointer;
+            transform-origin: center center; transition: transform 0.1s, opacity 0.1s;
         }
 
-        /* 선택 영역 가이드 라인 */
-        .highlight-bar {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.03);
-            border-radius: 8px;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* --- 2. 리스트 & 기타 --- */
-        .schedule-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
-        }
+        /* --- 스케줄 리스트 --- */
+        .schedule-list { flex: 1; overflow-y: auto; padding: 0; background: #fff; }
 
         .time-slot {
-            display: flex;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid #efefef;
-            cursor: pointer;
-            transition: background 0.2s;
+            display: flex; align-items: center; padding: 16px 20px;
+            border-bottom: 1px solid #f2f2f7; cursor: pointer; transition: background 0.2s;
         }
-        .time-slot:active { background-color: #f0f0f0; }
+        .time-slot:active { background-color: #f2f2f7; }
 
-        .time-label {
-            width: 50px;
-            font-weight: 600;
-            color: #333;
-            font-size: 15px;
-        }
-
-        .task-content {
-            flex: 1;
-            color: #c7c7cc;
-            font-size: 16px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+        .time-label { width: 50px; font-weight: 600; color: #333; font-size: 15px; }
+        .task-content { flex: 1; color: #c7c7cc; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .task-content.filled { color: #000; }
 
-        /* 모달 스타일 */
+        /* --- 공통 모달 스타일 --- */
         .modal-overlay {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            z-index: 100;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(2px);
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: 100;
+            justify-content: center; align-items: center; backdrop-filter: blur(3px);
         }
         .modal-box {
             background: #fff; padding: 24px; border-radius: 20px;
             width: 80%; max-width: 320px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             animation: popIn 0.2s ease-out;
+            display: flex; flex-direction: column; gap: 15px;
         }
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        .modal-title { margin: 0 0 20px 0; font-size: 20px; font-weight: 700; text-align: center;}
+        .modal-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 5px; }
+        
+        /* 입력창 스타일 */
         .modal-input {
             width: 100%; padding: 12px; border: 1px solid #e5e5ea; border-radius: 12px;
-            font-size: 16px; box-sizing: border-box; outline: none; background: #f9f9f9; margin-bottom: 20px;
+            font-size: 16px; box-sizing: border-box; outline: none; background: #f9f9f9;
         }
         .modal-input:focus { background: #fff; border-color: var(--primary-color); }
-        .modal-buttons { display: flex; gap: 10px; }
+
+        /* 스위치 스타일 (설정용) */
+        .setting-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+        }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-label { font-size: 16px; color: #333; }
+        
+        /* 커스텀 토글 스위치 */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e5e5ea; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 24px; width: 24px;
+            left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* 버튼 그룹 */
+        .modal-buttons { display: flex; gap: 10px; margin-top: 10px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
         .btn-cancel { background: #f2f2f7; color: #000; }
         .btn-save { background: var(--primary-color); color: #fff; }
-
-        .noti-btn {
-            position: absolute; bottom: 30px; right: 30px;
-            background: var(--primary-color); color: white; border-radius: 50%;
-            width: 56px; height: 56px;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,122,255,0.4);
-            font-size: 24px; z-index: 50; transition: transform 0.1s;
-        }
-        .noti-btn:active { transform: scale(0.9); }
+        .btn-test { background: #ff9500; color: white; margin-top: 10px; } /* 테스트 버튼 */
 
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    <div class="header">
+        <div class="app-title">Todo Schedule</div>
+        <div class="settings-btn" onclick="openSettings()">⚙️</div>
+    </div>
+
     <div class="date-picker-area">
-        <div class="highlight-bar"></div>
         <div class="wheel-container" id="dateWheel"></div>
     </div>
 
     <div class="schedule-list" id="scheduleList"></div>
-
-    <div class="noti-btn" onclick="requestNotification()">🔔</div>
 </div>
 
-<div class="modal-overlay" id="modal">
+<div class="modal-overlay" id="taskModal">
     <div class="modal-box">
-        <div class="modal-title" id="modalTitle">일정</div>
+        <div class="modal-title" id="taskModalTitle">일정</div>
         <input type="text" class="modal-input" id="taskInput" placeholder="할일을 입력하세요" autocomplete="off">
         <div class="modal-buttons">
-            <button class="btn btn-cancel" onclick="closeModal()">취소</button>
+            <button class="btn btn-cancel" onclick="closeTaskModal()">취소</button>
             <button class="btn btn-save" onclick="saveTask()">저장</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-box">
+        <div class="modal-title">알림 설정</div>
+        
+        <div class="setting-item">
+            <span class="setting-label">🔔 푸시 알림 (텍스트)</span>
+            <label class="switch">
+                <input type="checkbox" id="settingNoti">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <span class="setting-label">🔊 소리 (띵동~)</span>
+            <label class="switch">
+                <input type="checkbox" id="settingSound">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <span class="setting-label">📳 진동 (모바일)</span>
+            <label class="switch">
+                <input type="checkbox" id="settingVib">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="btn btn-test" onclick="testAlarm()">🔊 알림 미리듣기</button>
+
+        <div class="modal-buttons">
+            <button class="btn btn-save" onclick="saveSettings()">설정 저장</button>
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 설정 및 변수 ---
     const START_HOUR = 8;
     const END_HOUR = 17;
     let selectedDate = null;
     let currentEditingTime = null;
     let todos = {};
+    
+    // 기본 설정값
+    let settings = {
+        noti: true,  // 푸시 알림
+        sound: true, // 소리
+        vib: true    // 진동
+    };
 
-    // 데이터 로드
-    try {
-        const stored = localStorage.getItem('myTodos');
-        if (stored) todos = JSON.parse(stored);
-    } catch (e) { todos = {}; }
-
+    // DOM 요소
     const dateWheel = document.getElementById('dateWheel');
     const scheduleList = document.getElementById('scheduleList');
-    const modal = document.getElementById('modal');
+    const taskModal = document.getElementById('taskModal');
+    const settingsModal = document.getElementById('settingsModal');
     const taskInput = document.getElementById('taskInput');
 
-    // --- 1. 날짜 생성 및 3D 로직 ---
+    // --- 0. 데이터 로드 ---
+    try {
+        const storedTodos = localStorage.getItem('myTodos');
+        if (storedTodos) todos = JSON.parse(storedTodos);
+
+        const storedSettings = localStorage.getItem('mySettings');
+        if (storedSettings) settings = JSON.parse(storedSettings);
+    } catch (e) {
+        console.error('Data load fail', e);
+        todos = {};
+    }
+
+    // --- 1. 소리 재생 엔진 (Web Audio API) ---
+    // 외부 파일 없이 코드로 맑은 종소리를 만듭니다.
+    function playChime() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        // 소리 설정 (사인파 = 맑은 소리)
+        osc.type = 'sine';
+        // 주파수: 523.25(도) -> 1046.5(높은 도)로 부드럽게 이동
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.1);
+
+        // 볼륨: 커졌다가 서서히 사라짐 (페이드 아웃)
+        gain.gain.setValueAtTime(0.01, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 1.5);
+    }
+
+    // --- 2. 알림 실행 함수 (종합) ---
+    function triggerAlarm(message) {
+        // 1. 소리
+        if (settings.sound) {
+            playChime();
+        }
+
+        // 2. 진동 (모바일 지원 브라우저만 작동)
+        if (settings.vib && navigator.vibrate) {
+            navigator.vibrate([200, 100, 200]); // 징-징-징
+        }
+
+        // 3. 푸시 알림
+        if (settings.noti && Notification.permission === 'granted') {
+            new Notification('⏰ 할일 알림', {
+                body: message,
+                icon: 'https://cdn-icons-png.flaticon.com/512/893/893257.png'
+            });
+        }
+    }
+
+    // 테스트 함수
+    window.testAlarm = () => {
+        // 일시적으로 권한 요청
+        if (Notification.permission !== 'granted') Notification.requestPermission();
+        triggerAlarm("이것은 알림 테스트입니다!");
+    };
+
+    // --- 3. UI 로직: 다이얼 ---
     function initDateWheel() {
         const today = new Date();
-        // 앞뒤로 넉넉하게 생성 (스크롤 느낌을 위해)
         for (let i = -10; i <= 30; i++) {
             const d = new Date();
             d.setDate(today.getDate() + i);
-            
             const div = document.createElement('div');
             div.className = 'date-item';
             
@@ -238,97 +316,65 @@ document.addEventListener('DOMContentLoaded', () => {
             div.dataset.date = dateStr;
             div.textContent = `${month}.${day} ${dayName}`;
             
-            // 클릭시 중앙으로 이동
-            div.onclick = () => {
-                div.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            };
-
+            div.onclick = () => div.scrollIntoView({ behavior: 'smooth', block: 'center' });
             dateWheel.appendChild(div);
 
-            // 오늘 날짜 초기 선택
             if (i === 0) selectedDate = dateStr;
         }
 
-        // 초기 렌더링 후 중앙 정렬 (약간의 지연 필요)
         setTimeout(() => {
             const todayItem = document.querySelector(`.date-item[data-date="${selectedDate}"]`);
             if(todayItem) todayItem.scrollIntoView({ block: 'center' });
-            update3DVisuals(); // 초기 3D 효과 적용
+            update3DVisuals();
         }, 100);
 
-        // 스크롤 이벤트 (3D 효과 + 날짜 선택)
-        let isScrolling;
         dateWheel.addEventListener('scroll', () => {
-            // 1. 시각적 3D 효과는 즉시 갱신 (부드러움)
             requestAnimationFrame(update3DVisuals);
-
-            // 2. 날짜 선택 로직은 스크롤이 멈췄을 때 확정
-            clearTimeout(isScrolling);
-            isScrolling = setTimeout(detectActiveDate, 100);
+            clearTimeout(window.scrollTimer);
+            window.scrollTimer = setTimeout(detectActiveDate, 100);
         });
     }
 
-    // --- 2. 핵심: 3D 드럼 효과 계산 함수 ---
     function update3DVisuals() {
         const center = dateWheel.scrollTop + dateWheel.offsetHeight / 2;
-        const items = document.querySelectorAll('.date-item');
-        
-        items.forEach(item => {
+        document.querySelectorAll('.date-item').forEach(item => {
             const itemCenter = item.offsetTop + item.offsetHeight / 2;
-            const dist = center - itemCenter; // 중심과의 거리
-            
-            // 거리에 따른 각도 계산 (멀수록 많이 회전)
-            const angle = dist / 10; // 10은 감도 조절
-            
-            // 거리에 따른 투명도 및 스케일
+            const dist = center - itemCenter;
             const absDist = Math.abs(dist);
-            const scale = Math.max(0.8, 1 - (absDist / 1000)); // 멀어지면 작아짐
-            const opacity = Math.max(0.3, 1 - (absDist / 200)); // 멀어지면 흐려짐
             
-            // 스타일 적용
+            const angle = dist / 10;
+            const scale = Math.max(0.85, 1 - (absDist / 1000));
+            const opacity = Math.max(0.3, 1 - (absDist / 250));
+            
             item.style.transform = `rotateX(${-angle}deg) scale(${scale})`;
             item.style.opacity = opacity;
             
-            // 중앙에 가까운 녀석 스타일
-            if (absDist < 20) {
-                item.style.color = "#000";
-                item.style.fontWeight = "bold";
-                item.style.fontSize = "22px";
+            if (absDist < 25) {
+                item.style.color = "#000"; item.style.fontWeight = "bold"; item.style.fontSize = "22px";
             } else {
-                item.style.color = "#8e8e93";
-                item.style.fontWeight = "normal";
-                item.style.fontSize = "18px";
+                item.style.color = "#8e8e93"; item.style.fontWeight = "normal"; item.style.fontSize = "18px";
             }
         });
     }
 
     function detectActiveDate() {
-        // 스크롤이 멈췄을 때 가장 중앙에 있는 요소 찾기
         const center = dateWheel.scrollTop + dateWheel.offsetHeight / 2;
         let closest = null;
         let minDiff = Infinity;
 
         document.querySelectorAll('.date-item').forEach(item => {
-            const itemCenter = item.offsetTop + item.offsetHeight / 2;
-            const diff = Math.abs(center - itemCenter);
-            if (diff < minDiff) {
-                minDiff = diff;
-                closest = item;
-            }
+            const diff = Math.abs(center - (item.offsetTop + item.offsetHeight / 2));
+            if (diff < minDiff) { minDiff = diff; closest = item; }
         });
 
-        if (closest) {
-            const newDate = closest.dataset.date;
-            if (selectedDate !== newDate) {
-                selectedDate = newDate;
-                renderSchedule();
-                // 정확히 중앙에 맞추기 위해 살짝 스크롤 보정
-                closest.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+        if (closest && selectedDate !== closest.dataset.date) {
+            selectedDate = closest.dataset.date;
+            renderSchedule();
+            closest.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 
-    // --- 3. 스케줄 관리 ---
+    // --- 4. 스케줄 UI ---
     function renderSchedule() {
         scheduleList.innerHTML = '';
         if (!selectedDate) return;
@@ -336,55 +382,61 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let h = START_HOUR; h <= END_HOUR; h++) {
             const key = `${selectedDate}-${h}`;
             const task = todos[key] || '';
-            
             const div = document.createElement('div');
             div.className = 'time-slot';
-            div.onclick = () => openModal(h, task);
-            
-            div.innerHTML = `
-                <div class="time-label">${h}:00</div>
-                <div class="task-content ${task ? 'filled' : ''}">${task || '입력...'}</div>
-            `;
+            div.onclick = () => openTaskModal(h, task);
+            div.innerHTML = `<div class="time-label">${h}:00</div><div class="task-content ${task ? 'filled' : ''}">${task || '입력하려면 터치'}</div>`;
             scheduleList.appendChild(div);
         }
     }
 
-    window.openModal = (h, t) => {
+    // --- 5. 모달 및 기능 ---
+    // (1) 할일 모달
+    window.openTaskModal = (h, t) => {
         currentEditingTime = h;
-        document.getElementById('modalTitle').textContent = `${h}:00 일정`;
+        document.getElementById('taskModalTitle').textContent = `${h}:00 일정`;
         taskInput.value = t;
-        modal.style.display = 'flex';
+        taskModal.style.display = 'flex';
         taskInput.focus();
     };
-
-    window.closeModal = () => modal.style.display = 'none';
-
+    window.closeTaskModal = () => taskModal.style.display = 'none';
+    
     window.saveTask = () => {
         const val = taskInput.value.trim();
         const key = `${selectedDate}-${currentEditingTime}`;
-        if (val) todos[key] = val;
-        else delete todos[key];
-        
+        if (val) todos[key] = val; else delete todos[key];
         localStorage.setItem('myTodos', JSON.stringify(todos));
         renderSchedule();
-        closeModal();
+        closeTaskModal();
+    };
+    taskInput.addEventListener('keypress', (e) => { if(e.key==='Enter') saveTask(); });
+
+    // (2) 설정 모달
+    window.openSettings = () => {
+        document.getElementById('settingNoti').checked = settings.noti;
+        document.getElementById('settingSound').checked = settings.sound;
+        document.getElementById('settingVib').checked = settings.vib;
+        settingsModal.style.display = 'flex';
+    };
+    
+    window.saveSettings = () => {
+        settings.noti = document.getElementById('settingNoti').checked;
+        settings.sound = document.getElementById('settingSound').checked;
+        settings.vib = document.getElementById('settingVib').checked;
+        
+        localStorage.setItem('mySettings', JSON.stringify(settings));
+        
+        if (settings.noti && Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+        
+        settingsModal.style.display = 'none';
     };
 
-    taskInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') saveTask();
-    });
-
-    // --- 4. 알림 ---
-    window.requestNotification = () => {
-        if (!('Notification' in window)) return alert('알림 미지원 브라우저');
-        Notification.requestPermission().then(p => {
-            alert(p === 'granted' ? '알림이 켜졌습니다.' : '알림이 차단되었습니다.');
-        });
-    };
-
+    // --- 6. 백그라운드 타이머 ---
     setInterval(() => {
-        if (Notification.permission !== 'granted') return;
         const now = new Date();
+        // 정각(0분)이며 5초 이내일 때만 실행
         if (now.getMinutes() !== 0 || now.getSeconds() > 5) return;
 
         const h = now.getHours();
@@ -395,11 +447,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const d = String(now.getDate()).padStart(2,'0');
         
         const task = todos[`${y}-${m}-${d}-${h}`];
+        
+        // **중요: 이미 알림을 보낸 시간인지 체크하는 로직 필요시 추가 가능**
+        // 여기서는 간단히 task가 있으면 실행
         if (task) {
-            new Notification(`[${h}시] ${task}`);
+           triggerAlarm(task);
         }
-    }, 5000);
+    }, 5000); // 5초마다 체크
 
+    // 초기 실행
     initDateWheel();
     renderSchedule();
 });
