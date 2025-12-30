@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dark Todo Master (Alarm Fixed)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dark Todo Master (Mobile Fix)</title>
     <style>
         :root {
             /* --- 다크 테마 컬러 --- */
@@ -28,9 +28,15 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            height: 100vh;
+            /* 모바일 주소창 대응을 위한 dvh 단위 사용 */
+            height: 100vh; /* Fallback */
+            height: 100dvh; 
             overflow: hidden;
             user-select: none;
+            /* 아이폰 노치 대응 */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            box-sizing: border-box;
         }
 
         .app-container {
@@ -46,12 +52,12 @@
 
         /* --- 헤더 --- */
         .header {
-            padding: 20px 25px;
+            padding: 15px 20px;
             display: flex; justify-content: space-between; align-items: center;
             background: var(--box-bg); z-index: 10;
+            flex-shrink: 0; /* 헤더 크기 고정 */
         }
         .app-title { font-size: 20px; font-weight: 700; color: var(--text-main); }
-        
         .header-controls { display: flex; gap: 15px; }
 
         /* 뉴모피즘 버튼 */
@@ -73,14 +79,14 @@
 
         /* --- 메인 화면 --- */
         .date-picker-area {
-            height: 160px; background: var(--bg-color); position: relative; overflow: hidden;
-            perspective: 1000px; margin-bottom: 10px;
+            height: 150px; background: var(--bg-color); position: relative; overflow: hidden;
+            perspective: 1000px; margin-bottom: 5px; flex-shrink: 0;
             mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
         }
         .wheel-container {
             height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
-            padding: 60px 0; scrollbar-width: none;
+            padding: 55px 0; scrollbar-width: none;
         }
         .wheel-container::-webkit-scrollbar { display: none; }
         .wheel-item {
@@ -93,7 +99,14 @@
             text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
         }
 
-        .schedule-list { flex: 1; overflow-y: auto; padding: 10px 20px; }
+        /* [수정] 스케줄 리스트 하단 여백 추가 */
+        .schedule-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 10px 20px;
+            /* 마지막 아이템이 잘리지 않도록 하단 패딩 대폭 추가 */
+            padding-bottom: 80px; 
+        }
         .schedule-list::-webkit-scrollbar { display: none; }
 
         .time-slot { 
@@ -112,7 +125,7 @@
         /* --- 모달 공통 --- */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 100;
+            background: rgba(0,0,0,0.7); z-index: 100;
             justify-content: center; align-items: center; backdrop-filter: blur(5px);
         }
         .modal-box {
@@ -120,11 +133,14 @@
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             padding: 25px; display: flex; flex-direction: column; color: var(--text-main);
             animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* [수정] 모달이 화면보다 클 경우 스크롤 허용 */
+            max-height: 85vh; 
+            overflow-y: auto;
         }
         @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* --- 시간 설정 영역 --- */
-        .time-setter-area { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+        .time-setter-area { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; flex-shrink: 0; }
         .time-display { 
             font-size: 32px; font-weight: 800; color: var(--text-main); 
             display: flex; align-items: center; gap: 5px; margin-bottom: 15px;
@@ -153,11 +169,11 @@
 
         /* 프리셋 & 입력창 */
         .task-preset-area { 
-            height: 120px; position: relative; overflow: hidden; margin-bottom: 20px;
+            height: 120px; position: relative; overflow: hidden; margin-bottom: 20px; flex-shrink: 0;
             mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
         }
-        .input-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .input-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-shrink: 0; }
         .neu-input {
             flex: 1; padding: 15px; border-radius: 12px;
             background: var(--bg-color); border: none; outline: none;
@@ -168,6 +184,7 @@
             width: 50px; height: 50px; border-radius: 12px; background: var(--bg-color);
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; color: var(--text-sub);
+            flex-shrink: 0;
         }
         .icon-btn:active { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); color: var(--accent-color); }
 
@@ -176,10 +193,11 @@
             padding: 10px; margin-bottom: 20px; max-height: 150px; overflow-y: auto;
             background: var(--bg-color); border-radius: 12px;
             box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            flex-shrink: 0;
         }
         .emoji-item { font-size: 20px; text-align: center; cursor: pointer; padding: 5px; }
 
-        .modal-buttons { display: flex; gap: 15px; }
+        .modal-buttons { display: flex; gap: 15px; margin-top: auto; }
         .modal-btn { 
             flex: 1; padding: 15px; border: none; border-radius: 12px;
             background: var(--bg-color); font-size: 16px; font-weight: 700; cursor: pointer;
@@ -196,7 +214,6 @@
         }
         .setting-label { font-size: 16px; color: var(--text-main); }
         
-        /* 뉴모피즘 토글 스위치 */
         .neu-switch {
             position: relative; width: 50px; height: 26px;
             background: var(--bg-color); border-radius: 20px;
@@ -210,16 +227,12 @@
             box-shadow: 2px 2px 4px var(--shadow-dark);
             transition: all 0.3s;
         }
-        .neu-switch.checked {
-            /* 켜졌을 때 살짝 밝게 */
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-        }
+        .neu-switch.checked { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
         .neu-switch.checked::after {
             left: 27px; background: var(--success-color);
             box-shadow: 0 0 10px var(--success-color);
         }
 
-        /* 사용자 칩 */
         .user-list-area { 
             padding: 15px; margin-bottom: 15px; border-radius: 12px;
             box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
@@ -302,17 +315,14 @@
 <div class="modal-overlay" id="settingsModal">
     <div class="modal-box">
         <h3 style="text-align:center; margin:0 0 20px 0;">알림 설정</h3>
-        
         <div class="setting-row">
             <span class="setting-label">🔊 소리 알림</span>
             <div class="neu-switch" id="toggleSound" onclick="toggleSetting('sound')"></div>
         </div>
-
         <div class="setting-row">
             <span class="setting-label">🔔 푸시 알림</span>
             <div class="neu-switch" id="toggleNoti" onclick="toggleSetting('noti')"></div>
         </div>
-        
         <div class="modal-buttons" style="margin-top:20px;">
             <button class="modal-btn save" onclick="testAlarm()">테스트</button>
             <button class="modal-btn" onclick="closeSettingsModal()">닫기</button>
@@ -322,22 +332,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 설정 변수 ---
+    // 설정
     const START_HOUR = 8;
     const END_HOUR = 24; 
     const PRESET_TASKS = ["(없음)", "회의", "업무", "식사", "운동", "휴식", "스터디", "외출", "이동", "취침", "점검", "보고"];
     const EMOJIS = ["😀","😂","😍","👍","ok","🔥","✅","❤️","😭","🎉","✈️","💊","🏥","📅","⭐","☕","🍔","🍺"];
 
-    // --- 상태 ---
     let currentUser = null;
     let selectedDate = null;
     let editingHour = 0;
     let editingMin = 0;
     let todos = {}; 
     let settings = { sound: true, noti: true };
-    let lastAlarmTime = ""; // 중복 알림 방지용
+    let lastAlarmTime = "";
 
-    // --- DOM ---
     const dateWheel = document.getElementById('dateWheel');
     const scheduleList = document.getElementById('scheduleList');
     const minuteWheel = document.getElementById('minuteWheel');
@@ -345,7 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskInput = document.getElementById('taskInput');
     const userBtn = document.getElementById('userBtn');
 
-    // --- 초기화 ---
     initData();
     initDateWheel();
     initPresetWheel();
@@ -367,27 +374,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSettingsUI();
     }
 
-    // =========================================
-    // 1. 알람 시스템 (New!)
-    // =========================================
     function startAlarmClock() {
-        // 5초마다 체크
         setInterval(() => {
             const now = new Date();
             const h = now.getHours();
             const m = now.getMinutes();
             const timeKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${h}`;
-            
-            // 현재 분(minute)에 해당하는 "알림 키" (중복 방지)
             const currentCheckKey = `${timeKey}:${m}`;
-
-            // 이미 울린 시간이면 패스
             if (lastAlarmTime === currentCheckKey) return;
 
-            // 할일 확인
             const todo = todos[timeKey];
             if (todo && typeof todo === 'object') {
-                // 저장된 분(min)과 현재 분(m)이 일치하면 알람!
                 if (parseInt(todo.min) === m) {
                     triggerAlarm(todo.text);
                     lastAlarmTime = currentCheckKey;
@@ -405,14 +402,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 맑은 종소리 생성 (Web Audio API)
     function playChime() {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.1); // C6
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
         osc.connect(gain);
@@ -421,32 +417,20 @@ document.addEventListener('DOMContentLoaded', () => {
         osc.stop(ctx.currentTime + 1.5);
     }
 
-    window.testAlarm = () => {
-        triggerAlarm("알림 소리와 푸시 알림 테스트입니다.");
-    };
-
-    // 설정 UI 관련
-    window.openSettingsModal = () => {
-        updateSettingsUI();
-        document.getElementById('settingsModal').style.display = 'flex';
-    };
+    window.testAlarm = () => triggerAlarm("알림 테스트입니다.");
+    window.openSettingsModal = () => { updateSettingsUI(); document.getElementById('settingsModal').style.display = 'flex'; };
     window.closeSettingsModal = () => document.getElementById('settingsModal').style.display = 'none';
-
     window.toggleSetting = (key) => {
         settings[key] = !settings[key];
         localStorage.setItem('app_settings', JSON.stringify(settings));
         updateSettingsUI();
         if(key === 'noti' && settings.noti) Notification.requestPermission();
     };
-
     function updateSettingsUI() {
         document.getElementById('toggleSound').className = `neu-switch ${settings.sound ? 'checked' : ''}`;
         document.getElementById('toggleNoti').className = `neu-switch ${settings.noti ? 'checked' : ''}`;
     }
 
-    // =========================================
-    // 2. 메인 화면 로직
-    // =========================================
     function initDateWheel() {
         dateWheel.innerHTML = '';
         const today = new Date();
@@ -454,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const d = new Date(); d.setDate(today.getDate() + i);
             const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
             const dw = ['일','월','화','수','목','금','토'][d.getDay()];
-            
             const div = document.createElement('div');
             div.className = 'wheel-item';
             div.textContent = `${m}.${day} ${dw}`;
@@ -463,12 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dateWheel.appendChild(div);
             if(i === 0) selectedDate = div.dataset.value;
         }
-
-        setupVerticalWheel(dateWheel, (val) => {
-            selectedDate = val;
-            renderSchedule();
-        });
-        
+        setupVerticalWheel(dateWheel, (val) => { selectedDate = val; renderSchedule(); });
         setTimeout(() => {
             const t = Array.from(dateWheel.children).find(c => c.dataset.value === selectedDate);
             if(t) t.scrollIntoView({block:'center'});
@@ -478,35 +456,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderSchedule() {
         scheduleList.innerHTML = '';
         if(!selectedDate) return;
-
         for(let h = START_HOUR; h <= END_HOUR; h++) {
             const key = `${selectedDate}-${h}`;
             let data = todos[key];
             let text = ""; let min = "00";
-            
             if (typeof data === 'string') { text = data; } 
             else if (data) { text = data.text; min = String(data.min).padStart(2, '0'); }
-
             const div = document.createElement('div');
             div.className = 'time-slot';
             div.onclick = () => openTaskModal(h, min, text);
             const contentClass = text ? 'filled' : 'empty';
-            div.innerHTML = `
-                <div class="time-label">${h}:${min}</div>
-                <div class="task-content ${contentClass}">${text || '터치하여 일정 추가'}</div>
-            `;
+            div.innerHTML = `<div class="time-label">${h}:${min}</div><div class="task-content ${contentClass}">${text || '터치하여 일정 추가'}</div>`;
             scheduleList.appendChild(div);
         }
     }
 
-    // =========================================
-    // 3. 입력 모달
-    // =========================================
     function initMinuteWheel() {
         minuteWheel.innerHTML = '';
         const pad = document.createElement('div'); pad.style.width = "calc(50% - 30px)"; pad.style.flexShrink="0";
         minuteWheel.appendChild(pad.cloneNode(true));
-
         for (let i = 0; i < 60; i++) {
             const span = document.createElement('span');
             span.className = 'min-item';
@@ -601,9 +569,6 @@ document.addEventListener('DOMContentLoaded', () => {
         closeTaskModal();
     };
 
-    // =========================================
-    // 4. 유틸 및 사용자 관리
-    // =========================================
     function switchUser(id) {
         currentUser = id;
         document.getElementById('headerUserName').textContent = id ? id : "Guest";
