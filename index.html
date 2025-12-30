@@ -3,19 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Todo Master 24H (Fixed)</title>
+    <title>Dark Todo Master</title>
     <style>
         :root {
-            --primary-color: #007aff;
-            --bg-color: #f2f2f7;
-            --box-bg: #ffffff;
-            --text-color: #1c1c1e;
+            /* --- 다크 테마 컬러 팔레트 --- */
+            --bg-color: #2b2e33;       /* 전체 배경 */
+            --box-bg: #2b2e33;         /* 컨테이너 배경 (뉴모피즘을 위해 배경과 동일) */
+            --text-main: #e0e5ec;      /* 메인 텍스트 (흰색에 가까운 회색) */
+            --text-sub: #9baacf;       /* 서브 텍스트 */
+            
+            --accent-color: #ff6b6b;   /* 포인트 컬러 (오렌지/코랄) */
+            
+            /* 뉴모피즘 그림자 설정 */
+            --shadow-light: #35393f;   /* 빛 받는 부분 */
+            --shadow-dark: #212327;    /* 그림자 지는 부분 */
+            
+            --danger-color: #ff4757;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: var(--text-main);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -26,134 +35,249 @@
 
         .app-container {
             width: 100%;
-            max-width: 450px;
+            max-width: 480px;
             background: var(--box-bg);
             display: flex;
             flex-direction: column;
             height: 100%;
             position: relative;
+            /* PC화면에서 앱처럼 보이게 그림자 추가 */
+            box-shadow: 0 0 30px rgba(0,0,0,0.5); 
         }
 
         /* --- 헤더 --- */
         .header {
-            padding: 15px 20px;
+            padding: 20px 25px;
             display: flex; justify-content: space-between; align-items: center;
-            background: #fff; border-bottom: 1px solid #e5e5ea; z-index: 10;
+            background: var(--box-bg);
+            z-index: 10;
         }
-        .app-title { font-size: 18px; font-weight: 800; }
-        .user-btn {
-            background: #eef1f5; padding: 8px 12px; border-radius: 20px;
-            font-size: 14px; font-weight: 600; color: var(--primary-color);
-            cursor: pointer; display: flex; align-items: center; gap: 5px;
+        .app-title { 
+            font-size: 20px; font-weight: 700; letter-spacing: 0.5px;
+            color: var(--text-main);
         }
-        .user-status-dot { width: 8px; height: 8px; background: #ccc; border-radius: 50%; }
-        .user-status-dot.active { background: #34c759; }
+        
+        /* 뉴모피즘 버튼 스타일 */
+        .neu-btn {
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            color: var(--text-sub);
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .neu-btn:active {
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            color: var(--accent-color);
+        }
+        .neu-btn.active-user {
+            color: var(--accent-color);
+        }
+        
+        .user-status-dot { width: 8px; height: 8px; background: #555; border-radius: 50%; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5); }
+        .user-status-dot.active { background: var(--accent-color); box-shadow: 0 0 5px var(--accent-color); }
 
-        /* --- 메인 화면 --- */
+        /* --- 메인 화면 (다이얼 & 리스트) --- */
         .date-picker-area {
-            height: 140px; background: #fff; position: relative; overflow: hidden;
-            border-bottom: 1px solid #e5e5ea; perspective: 1000px;
+            height: 160px; 
+            background: var(--bg-color); 
+            position: relative; overflow: hidden;
+            perspective: 1000px;
+            margin-bottom: 10px;
+            /* 상단/하단 페이드 효과를 다크모드에 맞게 수정 */
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
         }
+        
         .wheel-container {
             height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
-            padding: 50px 0; scrollbar-width: none;
+            padding: 60px 0; scrollbar-width: none;
         }
         .wheel-container::-webkit-scrollbar { display: none; }
+        
         .wheel-item {
             height: 40px; display: flex; justify-content: center; align-items: center;
-            font-size: 18px; color: #aaa; scroll-snap-align: center;
-            transform-origin: center center; transition: all 0.1s;
+            font-size: 18px; color: var(--text-sub); scroll-snap-align: center;
+            transform-origin: center center; transition: all 0.2s;
+            opacity: 0.4;
+        }
+        /* 선택된 아이템 스타일 */
+        .wheel-item.selected-visual {
+            color: var(--accent-color);
+            opacity: 1;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
         }
 
-        .schedule-list { flex: 1; overflow-y: auto; background: #fff; }
-        .time-slot { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f2f2f7; cursor: pointer; }
-        .time-slot:active { background: #f9f9f9; }
+        .schedule-list { 
+            flex: 1; overflow-y: auto; 
+            padding: 10px 20px;
+        }
+        .schedule-list::-webkit-scrollbar { display: none; }
+
+        .time-slot { 
+            display: flex; align-items: center; 
+            padding: 18px 20px; margin-bottom: 12px;
+            border-radius: 16px;
+            background: var(--bg-color);
+            /* 평소엔 튀어나온 효과 */
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .time-slot:active {
+            transform: scale(0.98);
+            box-shadow: 2px 2px 5px var(--shadow-dark), -2px -2px 5px var(--shadow-light);
+        }
         
         .time-label { 
-            width: 60px; font-weight: 700; color: #333; font-size: 16px; 
+            width: 60px; font-weight: 700; color: var(--text-main); font-size: 16px; 
             font-variant-numeric: tabular-nums;
         }
-        .task-content { flex: 1; color: #c7c7cc; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .task-content.filled { color: #000; }
+        .task-content { 
+            flex: 1; color: var(--text-sub); font-size: 15px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
+        .task-content.filled { color: var(--accent-color); font-weight: 600; }
+        .task-content.empty { font-style: italic; opacity: 0.5; font-size: 13px; }
 
         /* --- 모달 --- */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 100;
-            justify-content: center; align-items: center; backdrop-filter: blur(3px);
+            background: rgba(0,0,0,0.6); z-index: 100;
+            justify-content: center; align-items: center; backdrop-filter: blur(5px);
         }
         .modal-box {
-            background: #fff; border-radius: 20px; width: 85%; max-width: 320px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden;
-            display: flex; flex-direction: column; animation: popUp 0.2s ease-out;
+            background: var(--bg-color); 
+            border-radius: 24px; width: 85%; max-width: 340px;
+            /* 모달 자체도 튀어나온 효과 */
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            padding: 25px;
+            display: flex; flex-direction: column; 
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--text-main);
         }
-        @keyframes popUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         /* 시간 설정 영역 */
         .time-setter-area {
-            background: #f8f8f8; padding: 15px; border-bottom: 1px solid #eee;
-            display: flex; flex-direction: column; align-items: center;
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;
         }
-        .time-setter-title { font-size: 14px; color: #888; margin-bottom: 5px; }
         .time-display { 
-            font-size: 28px; font-weight: 800; color: #333; 
-            display: flex; align-items: center; gap: 5px;
+            font-size: 32px; font-weight: 800; color: var(--text-main); 
+            display: flex; align-items: center; gap: 5px; margin-bottom: 15px;
         }
+        .time-display span.active { color: var(--accent-color); text-shadow: 0 0 10px rgba(255,107,107,0.4); }
         
-        /* 분 선택 휠 */
+        /* 분 선택 휠 (가로) - 오목한 트랙 */
         .minute-wheel-wrapper {
             width: 100%; height: 60px; overflow-x: scroll; white-space: nowrap;
-            margin-top: 10px; scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch; scrollbar-width: none;
-            border-top: 1px solid #eee; border-bottom: 1px solid #eee;
-            background: #fff; display: flex; align-items: center;
-            position: relative;
+            scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+            
+            /* 오목한(Pressed) 느낌의 트랙 */
+            background: var(--bg-color);
+            border-radius: 30px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            
+            display: flex; align-items: center; position: relative;
         }
-        /* 중앙 선택선 */
-        .minute-wheel-wrapper::after {
-            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
-            background: var(--primary-color); transform: translateX(-50%); opacity: 0.3; pointer-events: none;
-        }
-
         .minute-wheel-wrapper::-webkit-scrollbar { display: none; }
-        .min-item {
-            display: inline-block; width: 50px; height: 50px; line-height: 50px;
-            text-align: center; scroll-snap-align: center; font-size: 18px; color: #ccc;
-            flex-shrink: 0; transition: all 0.2s;
-        }
-        .min-item.active { color: var(--primary-color); font-weight: bold; font-size: 24px; transform: scale(1.1); }
 
-        /* 할일 프리셋 */
-        .task-preset-area { height: 120px; position: relative; overflow: hidden; perspective: 800px; background: #fff; }
+        /* 중앙 가이드라인 (심플한 점) */
+        .minute-wheel-wrapper::after {
+            content: ''; position: absolute; left: 50%; bottom: 5px; width: 4px; height: 4px;
+            background: var(--accent-color); border-radius: 50%; transform: translateX(-50%);
+        }
+
+        .min-item {
+            display: inline-block; width: 60px; height: 60px; line-height: 60px;
+            text-align: center; scroll-snap-align: center; font-size: 16px; color: var(--text-sub);
+            flex-shrink: 0; transition: all 0.2s; opacity: 0.5;
+        }
+        .min-item.active { 
+            color: var(--accent-color); font-weight: bold; font-size: 22px; 
+            opacity: 1; transform: scale(1.2); 
+        }
+
+        /* 프리셋 휠 */
+        .task-preset-area { 
+            height: 120px; position: relative; overflow: hidden; 
+            margin-bottom: 20px;
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+        }
         
-        /* 입력창 */
-        .input-row { 
-            padding: 15px; background: #fff; border-top: 1px solid #eee; 
-            display: flex; align-items: center; gap: 8px; position: relative;
+        /* 입력창 영역 */
+        .input-group {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
         }
-        .modal-input {
-            flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
-            font-size: 16px; outline: none; background: #f5f5f7;
+        .neu-input {
+            flex: 1; padding: 15px; border-radius: 12px;
+            background: var(--bg-color); border: none; outline: none;
+            color: var(--text-main); font-size: 16px;
+            /* 오목한 효과 (Pressed) */
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
         }
-        .emoji-btn {
-            font-size: 24px; cursor: pointer; padding: 5px; 
-            border-radius: 50%; transition: background 0.2s;
+        .neu-input::placeholder { color: var(--text-sub); opacity: 0.5; }
+
+        .icon-btn {
+            width: 50px; height: 50px; border-radius: 12px;
+            background: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 20px; cursor: pointer; color: var(--text-sub);
+            transition: all 0.2s;
         }
+        .icon-btn:active {
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            color: var(--accent-color);
+        }
+
+        /* 이모지 피커 */
         .emoji-picker {
             display: none; grid-template-columns: repeat(6, 1fr); gap: 10px;
-            padding: 15px; background: #f9f9f9; max-height: 150px; overflow-y: auto;
-            border-top: 1px solid #eee;
+            padding: 10px; margin-bottom: 20px;
+            max-height: 150px; overflow-y: auto;
+            background: var(--bg-color); border-radius: 12px;
+            /* 오목한 배경 */
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
         }
-        .emoji-item { font-size: 22px; text-align: center; cursor: pointer; }
+        .emoji-item { 
+            font-size: 20px; text-align: center; cursor: pointer; padding: 5px; border-radius: 5px; 
+        }
+        .emoji-item:hover { background: rgba(255,255,255,0.05); }
 
-        .modal-buttons { display: flex; border-top: 1px solid #eee; }
-        .modal-btn { flex: 1; padding: 15px; border: none; background: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .modal-btn.save { color: var(--primary-color); }
-        
-        .highlight-bar { position: absolute; top: 50%; left: 0; right: 0; height: 36px; margin-top: -18px; background: rgba(0,0,0,0.03); pointer-events: none; z-index: 1; }
-        .user-list-area { padding: 15px; background:#fafafa; }
-        .user-chip { display:inline-block; padding:5px 10px; margin:3px; background:#fff; border:1px solid #ddd; border-radius:15px; cursor:pointer;}
-        .user-chip.current { border-color:var(--primary-color); color:var(--primary-color); background:#eef6ff; font-weight:bold;}
+        .modal-buttons { display: flex; gap: 15px; }
+        .modal-btn { 
+            flex: 1; padding: 15px; border: none; border-radius: 12px;
+            background: var(--bg-color); font-size: 16px; font-weight: 700; cursor: pointer;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            color: var(--text-sub); transition: all 0.2s;
+        }
+        .modal-btn:active {
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+        }
+        .modal-btn.save { color: var(--accent-color); }
+        .modal-btn.cancel { color: var(--text-sub); }
+
+        /* 사용자 관리 리스트 */
+        .user-list-area { 
+            padding: 15px; margin-bottom: 15px; border-radius: 12px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            min-height: 50px; display: flex; flex-wrap: wrap; gap: 8px;
+        }
+        .user-chip { 
+            padding: 8px 16px; border-radius: 20px; font-size: 14px; cursor: pointer;
+            background: var(--bg-color); color: var(--text-sub);
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+        }
+        .user-chip:active { box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light); }
+        .user-chip.current { color: var(--accent-color); font-weight: bold; box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light); }
 
     </style>
 </head>
@@ -161,15 +285,14 @@
 
 <div class="app-container">
     <div class="header">
-        <div class="app-title">Todo 24H</div>
-        <div class="user-btn" onclick="openUserModal()">
+        <div class="app-title">Todo Master</div>
+        <button class="neu-btn" id="userBtn" onclick="openUserModal()">
             <div class="user-status-dot" id="userStatusDot"></div>
             <span id="headerUserName">Guest</span>
-        </div>
+        </button>
     </div>
 
     <div class="date-picker-area">
-        <div class="highlight-bar"></div>
         <div class="wheel-container" id="dateWheel"></div>
     </div>
 
@@ -179,29 +302,27 @@
 <div class="modal-overlay" id="taskModal">
     <div class="modal-box">
         <div class="time-setter-area">
-            <div class="time-setter-title">시간 설정</div>
             <div class="time-display">
                 <span id="displayHour">00</span>
-                <span>:</span>
-                <span id="displayMin" style="color:var(--primary-color)">00</span>
+                <span style="opacity:0.3; margin-bottom:5px;">:</span>
+                <span id="displayMin" class="active">00</span>
             </div>
             <div class="minute-wheel-wrapper" id="minuteWheel"></div>
         </div>
         
         <div class="task-preset-area">
-            <div class="highlight-bar"></div>
             <div class="wheel-container" id="presetWheel"></div>
         </div>
 
-        <div class="input-row">
-            <input type="text" class="modal-input" id="taskInput" placeholder="내용 입력" autocomplete="off">
-            <div class="emoji-btn" onclick="toggleEmojiPicker()">☺</div>
+        <div class="input-group">
+            <input type="text" class="neu-input" id="taskInput" placeholder="할일을 입력하세요" autocomplete="off">
+            <div class="icon-btn" onclick="toggleEmojiPicker()">☺</div>
         </div>
         
         <div class="emoji-picker" id="emojiPicker"></div>
 
         <div class="modal-buttons">
-            <button class="modal-btn" onclick="closeTaskModal()">취소</button>
+            <button class="modal-btn cancel" onclick="closeTaskModal()">취소</button>
             <button class="modal-btn save" onclick="saveTask()">저장</button>
         </div>
     </div>
@@ -209,40 +330,45 @@
 
 <div class="modal-overlay" id="userModal">
     <div class="modal-box">
-        <div style="padding:15px; text-align:center; font-weight:bold; border-bottom:1px solid #eee;">사용자 관리</div>
+        <h3 style="text-align:center; margin:0 0 20px 0; color:var(--text-main);">사용자 계정</h3>
         <div class="user-list-area" id="savedUserList"></div>
-        <div style="padding:15px;">
-            <input type="text" class="modal-input" id="loginIdInput" placeholder="새 사용자 이름">
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button class="modal-btn save" style="background:var(--primary-color); color:#fff; border-radius:10px;" onclick="handleLogin()">로그인</button>
-                <button class="modal-btn" style="background:#eee; color:#333; border-radius:10px;" onclick="handleLogout()" id="logoutBtn">로그아웃</button>
-            </div>
+        
+        <div class="input-group">
+            <input type="text" class="neu-input" id="loginIdInput" placeholder="이름을 입력하세요">
         </div>
-        <div class="modal-buttons"><button class="modal-btn" onclick="closeUserModal()">닫기</button></div>
+
+        <div class="modal-buttons" style="flex-direction: column; gap: 10px;">
+            <button class="modal-btn save" onclick="handleLogin()">로그인 / 생성</button>
+            <button class="modal-btn cancel" onclick="handleLogout()" id="logoutBtn" style="color:var(--danger-color)">로그아웃</button>
+            <button class="modal-btn cancel" onclick="closeUserModal()" style="margin-top:10px;">닫기</button>
+        </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // 설정
+    // --- 설정 ---
     const START_HOUR = 8;
     const END_HOUR = 24; 
     const PRESET_TASKS = ["(없음)", "회의", "업무", "식사", "운동", "휴식", "스터디", "외출", "이동", "취침", "점검", "보고"];
     const EMOJIS = ["😀","😂","😍","👍","ok","🔥","✅","❤️","😭","🎉","✈️","💊","🏥","📅","⭐","☕","🍔","🍺"];
 
+    // --- 상태 ---
     let currentUser = null;
     let selectedDate = null;
     let editingHour = 0;
-    let editingMin = 0; // 현재 선택된 분 (상태값)
+    let editingMin = 0;
     let todos = {}; 
 
+    // --- DOM ---
     const dateWheel = document.getElementById('dateWheel');
     const scheduleList = document.getElementById('scheduleList');
     const minuteWheel = document.getElementById('minuteWheel');
     const emojiPicker = document.getElementById('emojiPicker');
     const taskInput = document.getElementById('taskInput');
+    const userBtn = document.getElementById('userBtn');
 
-    // 초기화
+    // --- 초기화 실행 ---
     initData();
     initDateWheel();
     initPresetWheel();
@@ -256,7 +382,10 @@ document.addEventListener('DOMContentLoaded', () => {
         else switchUser(null);
     }
 
-    // --- 1. 메인 로직 ---
+    // =========================================
+    // 1. 날짜 및 스케줄 (메인)
+    // =========================================
+    
     function initDateWheel() {
         dateWheel.innerHTML = '';
         const today = new Date();
@@ -267,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const div = document.createElement('div');
             div.className = 'wheel-item';
-            div.textContent = `${m}.${day} (${dw})`;
+            div.textContent = `${m}.${day} ${dw}`;
             div.dataset.value = `${y}-${m}-${day}`;
             div.onclick = () => div.scrollIntoView({behavior:'smooth', block:'center'});
             dateWheel.appendChild(div);
@@ -301,22 +430,29 @@ document.addEventListener('DOMContentLoaded', () => {
             div.className = 'time-slot';
             div.onclick = () => openTaskModal(h, min, text);
 
+            // 텍스트가 있으면 filled 클래스
+            const contentClass = text ? 'filled' : 'empty';
+            const displayTime = `${h}:${min}`;
+
             div.innerHTML = `
-                <div class="time-label">${h}:${min}</div>
-                <div class="task-content ${text ? 'filled' : ''}">${text || '터치하여 입력'}</div>
+                <div class="time-label">${displayTime}</div>
+                <div class="task-content ${contentClass}">${text || '터치하여 일정 추가'}</div>
             `;
             scheduleList.appendChild(div);
         }
     }
 
-    // --- 2. 입력 모달 (분 선택 수정됨) ---
+    // =========================================
+    // 2. 모달 로직 (시간/분/프리셋)
+    // =========================================
+
     function initMinuteWheel() {
         minuteWheel.innerHTML = '';
-        // 휠 중앙 정렬을 위한 패딩 (화면 너비의 50% - 아이템 절반)
+        // 패딩: 중앙 정렬을 위해
         const pad = document.createElement('div'); 
-        pad.style.width = "calc(50% - 25px)"; 
+        pad.style.width = "calc(50% - 30px)"; 
         pad.style.flexShrink="0";
-        minuteWheel.appendChild(pad.cloneNode(true)); // 앞 패딩
+        minuteWheel.appendChild(pad.cloneNode(true));
 
         for (let i = 0; i < 60; i++) {
             const span = document.createElement('span');
@@ -330,24 +466,20 @@ document.addEventListener('DOMContentLoaded', () => {
             minuteWheel.appendChild(span);
         }
         
-        minuteWheel.appendChild(pad.cloneNode(true)); // 뒤 패딩
+        minuteWheel.appendChild(pad.cloneNode(true));
 
-        // 스크롤 이벤트 (시각적 업데이트용)
         minuteWheel.addEventListener('scroll', () => {
             requestAnimationFrame(() => {
                 const center = minuteWheel.scrollLeft + minuteWheel.offsetWidth / 2;
                 let closest = null; let minDiff = Infinity;
-                
                 document.querySelectorAll('.min-item').forEach(item => {
                     const itemCenter = item.offsetLeft + item.offsetWidth / 2;
                     const diff = Math.abs(center - itemCenter);
                     if(diff < minDiff) { minDiff = diff; closest = item; }
                     item.classList.remove('active');
                 });
-                
                 if(closest) {
                     closest.classList.add('active');
-                    // 스크롤 중에도 상단 숫자는 바뀜 (저장 시에는 재계산하므로 안전)
                     const val = parseInt(closest.dataset.val);
                     document.getElementById('displayMin').textContent = String(val).padStart(2,'0');
                 }
@@ -360,7 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('displayMin').textContent = String(m).padStart(2,'0');
     }
 
-    // [중요] 저장 시점에 현재 선택된 분을 정확히 계산하는 함수
     function getCurrentSelectedMinute() {
         const center = minuteWheel.scrollLeft + minuteWheel.offsetWidth / 2;
         let closest = null; let minDiff = Infinity;
@@ -392,7 +523,6 @@ document.addEventListener('DOMContentLoaded', () => {
             emojiPicker.appendChild(sp);
         });
     }
-    
     window.toggleEmojiPicker = () => emojiPicker.style.display = (emojiPicker.style.display === 'grid') ? 'none' : 'grid';
 
     window.openTaskModal = (h, mStr, text) => {
@@ -406,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('taskModal').style.display = 'flex';
         
-        // 휠 위치 동기화 (모달 렌더링 직후)
+        // 분 휠 동기화
         setTimeout(() => {
             const target = document.querySelector(`.min-item[data-val="${initialMin}"]`);
             if(target) target.scrollIntoView({inline:'center'});
@@ -417,22 +547,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.saveTask = () => {
         const val = taskInput.value.trim();
-        // 저장 버튼 누르는 순간, 휠 위치를 기반으로 '분'을 다시 계산 (동기화 오류 방지)
-        const finalMin = getCurrentSelectedMinute();
-        
+        const finalMin = getCurrentSelectedMinute(); // 저장 시점의 분 계산
         const key = `${selectedDate}-${editingHour}`;
         
         if (val) {
             todos[key] = { text: val, min: finalMin };
         } else {
-            // 내용이 비었으면 삭제할지, 시간만 바꿀지 결정해야 함. 
-            // 여기서는 '내용이 없으면 저장 안 함'으로 처리 (오작동 방지)
-            if(todos[key]) {
-                if(confirm("내용을 비우면 일정이 삭제됩니다. 삭제하시겠습니까?")) delete todos[key];
-                else return; // 취소
-            } else {
-                 return alert("할일 내용을 입력해주세요.");
-            }
+            if(todos[key] && confirm("내용을 비우면 일정이 삭제됩니다. 삭제하시겠습니까?")) delete todos[key];
+            else if(!todos[key]) return alert("할일을 입력해주세요");
         }
 
         if(currentUser) localStorage.setItem(`todo_data_${currentUser}`, JSON.stringify(todos));
@@ -440,18 +562,26 @@ document.addEventListener('DOMContentLoaded', () => {
         closeTaskModal();
     };
 
-    // --- 3. 유틸 ---
+    // =========================================
+    // 3. 사용자 및 유틸
+    // =========================================
+
     function switchUser(id) {
         currentUser = id;
         document.getElementById('headerUserName').textContent = id ? id : "Guest";
-        document.getElementById('userStatusDot').classList.toggle('active', !!id);
-        document.getElementById('logoutBtn').style.display = id ? 'block' : 'none';
         
+        // 버튼 활성화 스타일
         if(id) {
+            userBtn.classList.add('active-user');
+            document.getElementById('userStatusDot').classList.add('active');
+            document.getElementById('logoutBtn').style.display = 'block';
             const data = localStorage.getItem(`todo_data_${id}`);
             todos = data ? JSON.parse(data) : {};
             localStorage.setItem('app_last_user', id);
         } else {
+            userBtn.classList.remove('active-user');
+            document.getElementById('userStatusDot').classList.remove('active');
+            document.getElementById('logoutBtn').style.display = 'none';
             todos = {};
             localStorage.removeItem('app_last_user');
         }
@@ -465,13 +595,18 @@ document.addEventListener('DOMContentLoaded', () => {
             Array.from(el.children).forEach(c => {
                 const cCenter = c.offsetTop + c.offsetHeight / 2;
                 const dist = center - cCenter; const absDist = Math.abs(dist);
-                const angle = dist / 10;
-                const scale = Math.max(0.8, 1 - absDist/1000);
+                // 다크모드용 시각 효과
+                const scale = Math.max(0.85, 1 - absDist/800);
                 const opacity = Math.max(0.3, 1 - absDist/150);
-                c.style.transform = `rotateX(${-angle}deg) scale(${scale})`;
+                c.style.transform = `scale(${scale})`;
                 c.style.opacity = opacity;
-                c.style.color = (absDist < 20) ? "#000" : "#ccc";
-                c.style.fontWeight = (absDist < 20) ? "bold" : "normal";
+                
+                if(absDist < 25) { 
+                    c.classList.add('selected-visual');
+                } else {
+                    c.classList.remove('selected-visual');
+                }
+                
                 if(absDist < minDiff) { minDiff = absDist; closest = c; }
             });
             return closest;
@@ -493,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openUserModal = () => {
         const listDiv = document.getElementById('savedUserList'); listDiv.innerHTML = '';
         const list = JSON.parse(localStorage.getItem('app_user_list') || '[]');
-        if(list.length===0) listDiv.innerHTML = '<span style="color:#aaa; font-size:13px;">없음</span>';
+        if(list.length===0) listDiv.innerHTML = '<span style="color:var(--text-sub); font-size:13px;">저장된 사용자 없음</span>';
         list.forEach(u => {
             const chip = document.createElement('span');
             chip.className = `user-chip ${u===currentUser?'current':''}`;
@@ -507,7 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.handleLogin = () => {
         const name = document.getElementById('loginIdInput').value.trim();
-        if(!name) return alert("이름 입력");
+        if(!name) return alert("이름을 입력하세요");
         let list = JSON.parse(localStorage.getItem('app_user_list') || '[]');
         if(!list.includes(name)) { list.push(name); localStorage.setItem('app_user_list', JSON.stringify(list)); }
         switchUser(name);
@@ -516,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.handleLogout = () => {
-        if(confirm("로그아웃?")) { switchUser(null); closeUserModal(); }
+        if(confirm("로그아웃 하시겠습니까?")) { switchUser(null); closeUserModal(); }
     };
 });
 </script>
