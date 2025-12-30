@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Dark Todo Master (Mobile Fix)</title>
+    <title>Dark Todo Master (3-Wheel Date)</title>
     <style>
         :root {
             /* --- 다크 테마 컬러 --- */
@@ -28,12 +28,9 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            /* 모바일 주소창 대응을 위한 dvh 단위 사용 */
-            height: 100vh; /* Fallback */
-            height: 100dvh; 
+            height: 100vh; height: 100dvh;
             overflow: hidden;
             user-select: none;
-            /* 아이폰 노치 대응 */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             box-sizing: border-box;
@@ -54,13 +51,11 @@
         .header {
             padding: 15px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            background: var(--box-bg); z-index: 10;
-            flex-shrink: 0; /* 헤더 크기 고정 */
+            background: var(--box-bg); z-index: 10; flex-shrink: 0;
         }
         .app-title { font-size: 20px; font-weight: 700; color: var(--text-main); }
         .header-controls { display: flex; gap: 15px; }
 
-        /* 뉴모피즘 버튼 */
         .neu-btn {
             background: var(--bg-color); border-radius: 12px; border: none;
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
@@ -73,39 +68,52 @@
             color: var(--accent-color);
         }
         .neu-btn.icon-only { padding: 10px; font-size: 18px; width: 42px; height: 42px; justify-content: center; }
-
+        
         .user-status-dot { width: 8px; height: 8px; background: #555; border-radius: 50%; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5); }
         .user-status-dot.active { background: var(--accent-color); box-shadow: 0 0 5px var(--accent-color); }
 
-        /* --- 메인 화면 --- */
+        /* --- 날짜 선택 영역 (3단 휠) --- */
         .date-picker-area {
             height: 150px; background: var(--bg-color); position: relative; overflow: hidden;
-            perspective: 1000px; margin-bottom: 5px; flex-shrink: 0;
+            margin-bottom: 5px; flex-shrink: 0;
+            /* 위아래 페이드 마스크 */
             mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            
+            display: flex; /* 가로 배치 */
+            justify-content: center;
         }
-        .wheel-container {
-            height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
-            padding: 55px 0; scrollbar-width: none;
+        
+        /* 개별 휠 컬럼 */
+        .wheel-col {
+            flex: 1; /* 3등분 */
+            height: 100%;
+            overflow-y: scroll; scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            padding: 55px 0; /* 중앙 정렬용 패딩 */
+            text-align: center;
         }
-        .wheel-container::-webkit-scrollbar { display: none; }
+        .wheel-col::-webkit-scrollbar { display: none; }
+
         .wheel-item {
             height: 40px; display: flex; justify-content: center; align-items: center;
-            font-size: 18px; color: var(--text-sub); scroll-snap-align: center;
+            font-size: 16px; color: var(--text-sub); scroll-snap-align: center;
             transform-origin: center center; transition: all 0.2s; opacity: 0.4;
         }
         .wheel-item.selected-visual {
-            color: var(--accent-color); opacity: 1; font-weight: 700;
+            color: var(--accent-color); opacity: 1; font-weight: 700; font-size: 19px;
             text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
         }
 
-        /* [수정] 스케줄 리스트 하단 여백 추가 */
+        /* 중앙 하이라이트 바 */
+        .highlight-bar {
+            position: absolute; top: 50%; left: 0; right: 0; height: 36px; margin-top: -18px;
+            background: rgba(0,0,0,0.03); pointer-events: none; z-index: 0;
+        }
+
+        /* --- 스케줄 리스트 --- */
         .schedule-list { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 10px 20px;
-            /* 마지막 아이템이 잘리지 않도록 하단 패딩 대폭 추가 */
-            padding-bottom: 80px; 
+            flex: 1; overflow-y: auto; padding: 10px 20px; padding-bottom: 80px; 
         }
         .schedule-list::-webkit-scrollbar { display: none; }
 
@@ -133,13 +141,11 @@
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             padding: 25px; display: flex; flex-direction: column; color: var(--text-main);
             animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            /* [수정] 모달이 화면보다 클 경우 스크롤 허용 */
-            max-height: 85vh; 
-            overflow-y: auto;
+            max-height: 85vh; overflow-y: auto;
         }
         @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* --- 시간 설정 영역 --- */
+        /* 모달 내부 요소들 (기존 유지) */
         .time-setter-area { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; flex-shrink: 0; }
         .time-display { 
             font-size: 32px; font-weight: 800; color: var(--text-main); 
@@ -147,7 +153,6 @@
         }
         .time-display span.active { color: var(--accent-color); text-shadow: 0 0 10px rgba(255,107,107,0.4); }
         
-        /* 분 휠 */
         .minute-wheel-wrapper {
             width: 100%; height: 60px; overflow-x: scroll; white-space: nowrap;
             scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -167,12 +172,14 @@
         }
         .min-item.active { color: var(--accent-color); font-weight: bold; font-size: 22px; opacity: 1; transform: scale(1.2); }
 
-        /* 프리셋 & 입력창 */
         .task-preset-area { 
             height: 120px; position: relative; overflow: hidden; margin-bottom: 20px; flex-shrink: 0;
             mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
         }
+        .wheel-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; padding: 55px 0; scrollbar-width: none; }
+        .wheel-container::-webkit-scrollbar { display: none; }
+
         .input-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-shrink: 0; }
         .neu-input {
             flex: 1; padding: 15px; border-radius: 12px;
@@ -207,13 +214,9 @@
         .modal-btn:active { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
         .modal-btn.save { color: var(--accent-color); }
 
-        /* --- 설정(Settings) 스타일 --- */
-        .setting-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
+        /* 설정 토글 */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .setting-label { font-size: 16px; color: var(--text-main); }
-        
         .neu-switch {
             position: relative; width: 50px; height: 26px;
             background: var(--bg-color); border-radius: 20px;
@@ -221,17 +224,11 @@
             cursor: pointer; transition: all 0.3s;
         }
         .neu-switch::after {
-            content: ''; position: absolute; top: 3px; left: 3px;
-            width: 20px; height: 20px; border-radius: 50%;
-            background: #aaa;
-            box-shadow: 2px 2px 4px var(--shadow-dark);
-            transition: all 0.3s;
+            content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+            background: #aaa; box-shadow: 2px 2px 4px var(--shadow-dark); transition: all 0.3s;
         }
         .neu-switch.checked { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
-        .neu-switch.checked::after {
-            left: 27px; background: var(--success-color);
-            box-shadow: 0 0 10px var(--success-color);
-        }
+        .neu-switch.checked::after { left: 27px; background: var(--success-color); box-shadow: 0 0 10px var(--success-color); }
 
         .user-list-area { 
             padding: 15px; margin-bottom: 15px; border-radius: 12px;
@@ -262,7 +259,10 @@
     </div>
 
     <div class="date-picker-area">
-        <div class="wheel-container" id="dateWheel"></div>
+        <div class="highlight-bar"></div>
+        <div class="wheel-col" id="yearWheel"></div>
+        <div class="wheel-col" id="monthWheel"></div>
+        <div class="wheel-col" id="dayWheel"></div>
     </div>
 
     <div class="schedule-list" id="scheduleList"></div>
@@ -338,15 +338,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const PRESET_TASKS = ["(없음)", "회의", "업무", "식사", "운동", "휴식", "스터디", "외출", "이동", "취침", "점검", "보고"];
     const EMOJIS = ["😀","😂","😍","👍","ok","🔥","✅","❤️","😭","🎉","✈️","💊","🏥","📅","⭐","☕","🍔","🍺"];
 
+    // 상태
     let currentUser = null;
-    let selectedDate = null;
-    let editingHour = 0;
-    let editingMin = 0;
     let todos = {}; 
     let settings = { sound: true, noti: true };
     let lastAlarmTime = "";
 
-    const dateWheel = document.getElementById('dateWheel');
+    // 날짜 상태 (3개의 휠 값)
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth() + 1;
+    let currentDay = new Date().getDate();
+
+    let editingHour = 0;
+    let editingMin = 0;
+
+    // DOM
+    const yearWheel = document.getElementById('yearWheel');
+    const monthWheel = document.getElementById('monthWheel');
+    const dayWheel = document.getElementById('dayWheel');
     const scheduleList = document.getElementById('scheduleList');
     const minuteWheel = document.getElementById('minuteWheel');
     const emojiPicker = document.getElementById('emojiPicker');
@@ -354,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userBtn = document.getElementById('userBtn');
 
     initData();
-    initDateWheel();
+    initDateWheels(); // 3단 휠 초기화
     initPresetWheel();
     initMinuteWheel();
     initEmojiPicker();
@@ -374,6 +383,173 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSettingsUI();
     }
 
+    // =========================================
+    // 1. 날짜 3단 휠 로직 (핵심 변경)
+    // =========================================
+    function initDateWheels() {
+        // 년도 (올해 기준 -5년 ~ +5년)
+        const startYear = currentYear - 5;
+        const endYear = currentYear + 5;
+        yearWheel.innerHTML = '';
+        createPadding(yearWheel);
+        for(let y = startYear; y <= endYear; y++) {
+            createWheelItem(yearWheel, `${y}년`, y);
+        }
+        createPadding(yearWheel);
+
+        // 월 (1~12)
+        monthWheel.innerHTML = '';
+        createPadding(monthWheel);
+        for(let m = 1; m <= 12; m++) {
+            createWheelItem(monthWheel, `${m}월`, m);
+        }
+        createPadding(monthWheel);
+
+        // 일 (초기화, updateDays에서 채워짐)
+        updateDays(); // 최초 실행으로 일 채우기
+        
+        // 스크롤 이벤트 연결
+        setupDateWheelEvent(yearWheel, (val) => { currentYear = parseInt(val); updateDays(); });
+        setupDateWheelEvent(monthWheel, (val) => { currentMonth = parseInt(val); updateDays(); });
+        setupDateWheelEvent(dayWheel, (val) => { currentDay = parseInt(val); renderSchedule(); });
+
+        // 초기 스크롤 위치 맞추기 (오늘 날짜)
+        setTimeout(() => {
+            scrollToValue(yearWheel, currentYear);
+            scrollToValue(monthWheel, currentMonth);
+            scrollToValue(dayWheel, currentDay);
+            renderSchedule();
+        }, 100);
+    }
+
+    // 일(Day) 휠 업데이트 (년/월이 바뀔 때 마다)
+    function updateDays() {
+        // 해당 년/월의 마지막 날짜 계산
+        const lastDay = new Date(currentYear, currentMonth, 0).getDate();
+        
+        // 기존 선택값 유지 (만약 31일이었는데 30일로 줄어들면 30일로 보정)
+        if (currentDay > lastDay) currentDay = lastDay;
+
+        // 현재 DOM 상태 확인 (이미 갯수가 맞다면 다시 그리지 않음 - 성능 최적화)
+        // 다만 여기서는 간단히 다시 그리는 방식으로 구현 (안전성)
+        dayWheel.innerHTML = '';
+        createPadding(dayWheel);
+        for(let d = 1; d <= lastDay; d++) {
+            createWheelItem(dayWheel, `${d}일`, d);
+        }
+        createPadding(dayWheel);
+
+        // 일자 휠을 현재 선택된 일자로 스크롤 (또는 보정된 일자로)
+        setTimeout(() => {
+             scrollToValue(dayWheel, currentDay);
+             renderSchedule();
+        }, 0);
+    }
+
+    function createWheelItem(container, text, val) {
+        const div = document.createElement('div');
+        div.className = 'wheel-item';
+        div.textContent = text;
+        div.dataset.value = val;
+        div.onclick = () => div.scrollIntoView({behavior:'smooth', block:'center'});
+        container.appendChild(div);
+    }
+    
+    function createPadding(container) {
+        // 중앙 정렬을 위해 휠 높이의 절반 정도 패딩을 줄 수도 있지만, 
+        // CSS에서 padding: 55px 0 으로 처리하고 있으므로 빈 요소는 선택사항.
+        // 스크롤 영역 확보를 위해 맨위/아래 여백용 더미를 넣는 것이 좋음.
+        const pad = document.createElement('div');
+        pad.style.height = "55px"; 
+        pad.style.flexShrink = "0";
+        container.appendChild(pad);
+    }
+
+    // 값으로 스크롤 이동
+    function scrollToValue(container, val) {
+        const target = Array.from(container.children).find(c => c.dataset.value == val);
+        if(target) target.scrollIntoView({block: 'center'});
+    }
+
+    // 휠 스크롤 이벤트 셋업
+    function setupDateWheelEvent(element, onSelect) {
+        let timer;
+        element.addEventListener('scroll', () => {
+            clearTimeout(timer);
+            // 시각적 효과 (3D)
+            requestAnimationFrame(() => updateWheelVisuals(element));
+
+            timer = setTimeout(() => {
+                const selected = getCenterItem(element);
+                if(selected && selected.dataset.value) {
+                    selected.scrollIntoView({behavior:'smooth', block:'center'});
+                    onSelect(selected.dataset.value);
+                }
+            }, 150); // 스크롤 멈춤 감지
+        });
+        // 초기 시각 효과
+        setTimeout(() => updateWheelVisuals(element), 50);
+    }
+
+    function getCenterItem(container) {
+        const center = container.scrollTop + container.offsetHeight / 2;
+        let closest = null; let minDiff = Infinity;
+        Array.from(container.children).forEach(child => {
+            if(!child.dataset.value) return; // 패딩 제외
+            const childCenter = child.offsetTop + child.offsetHeight / 2;
+            const diff = Math.abs(center - childCenter);
+            if(diff < minDiff) { minDiff = diff; closest = child; }
+        });
+        return closest;
+    }
+
+    function updateWheelVisuals(container) {
+        const center = container.scrollTop + container.offsetHeight / 2;
+        Array.from(container.children).forEach(child => {
+            if(!child.dataset.value) return;
+            const childCenter = child.offsetTop + child.offsetHeight / 2;
+            const dist = center - childCenter; 
+            const absDist = Math.abs(dist);
+            
+            // 시각 효과
+            const scale = Math.max(0.7, 1 - absDist/500);
+            const opacity = Math.max(0.2, 1 - absDist/100);
+            
+            child.style.transform = `scale(${scale})`;
+            child.style.opacity = opacity;
+            
+            if(absDist < 20) child.classList.add('selected-visual');
+            else child.classList.remove('selected-visual');
+        });
+    }
+
+    function renderSchedule() {
+        scheduleList.innerHTML = '';
+        // 현재 선택된 날짜 키 생성
+        const mStr = String(currentMonth).padStart(2,'0');
+        const dStr = String(currentDay).padStart(2,'0');
+        const selectedDateKey = `${currentYear}-${mStr}-${dStr}`;
+
+        for(let h = START_HOUR; h <= END_HOUR; h++) {
+            const key = `${selectedDateKey}-${h}`;
+            let data = todos[key];
+            let text = ""; let min = "00";
+            if (typeof data === 'string') { text = data; } 
+            else if (data) { text = data.text; min = String(data.min).padStart(2, '0'); }
+
+            const div = document.createElement('div');
+            div.className = 'time-slot';
+            div.onclick = () => openTaskModal(h, min, text);
+            const contentClass = text ? 'filled' : 'empty';
+            div.innerHTML = `<div class="time-label">${h}:${min}</div><div class="task-content ${contentClass}">${text || '터치하여 일정 추가'}</div>`;
+            scheduleList.appendChild(div);
+        }
+    }
+
+
+    // =========================================
+    // 2. 알람 및 기타 로직 (기존 유지)
+    // =========================================
     function startAlarmClock() {
         setInterval(() => {
             const now = new Date();
@@ -429,46 +605,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateSettingsUI() {
         document.getElementById('toggleSound').className = `neu-switch ${settings.sound ? 'checked' : ''}`;
         document.getElementById('toggleNoti').className = `neu-switch ${settings.noti ? 'checked' : ''}`;
-    }
-
-    function initDateWheel() {
-        dateWheel.innerHTML = '';
-        const today = new Date();
-        for (let i = -10; i <= 30; i++) {
-            const d = new Date(); d.setDate(today.getDate() + i);
-            const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
-            const dw = ['일','월','화','수','목','금','토'][d.getDay()];
-            const div = document.createElement('div');
-            div.className = 'wheel-item';
-            div.textContent = `${m}.${day} ${dw}`;
-            div.dataset.value = `${y}-${m}-${day}`;
-            div.onclick = () => div.scrollIntoView({behavior:'smooth', block:'center'});
-            dateWheel.appendChild(div);
-            if(i === 0) selectedDate = div.dataset.value;
-        }
-        setupVerticalWheel(dateWheel, (val) => { selectedDate = val; renderSchedule(); });
-        setTimeout(() => {
-            const t = Array.from(dateWheel.children).find(c => c.dataset.value === selectedDate);
-            if(t) t.scrollIntoView({block:'center'});
-        }, 200);
-    }
-
-    function renderSchedule() {
-        scheduleList.innerHTML = '';
-        if(!selectedDate) return;
-        for(let h = START_HOUR; h <= END_HOUR; h++) {
-            const key = `${selectedDate}-${h}`;
-            let data = todos[key];
-            let text = ""; let min = "00";
-            if (typeof data === 'string') { text = data; } 
-            else if (data) { text = data.text; min = String(data.min).padStart(2, '0'); }
-            const div = document.createElement('div');
-            div.className = 'time-slot';
-            div.onclick = () => openTaskModal(h, min, text);
-            const contentClass = text ? 'filled' : 'empty';
-            div.innerHTML = `<div class="time-label">${h}:${min}</div><div class="task-content ${contentClass}">${text || '터치하여 일정 추가'}</div>`;
-            scheduleList.appendChild(div);
-        }
     }
 
     function initMinuteWheel() {
@@ -557,7 +693,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveTask = () => {
         const val = taskInput.value.trim();
         const finalMin = getCurrentSelectedMinute();
-        const key = `${selectedDate}-${editingHour}`;
+        
+        const mStr = String(currentMonth).padStart(2,'0');
+        const dStr = String(currentDay).padStart(2,'0');
+        const selectedDateKey = `${currentYear}-${mStr}-${dStr}`;
+        const key = `${selectedDateKey}-${editingHour}`;
+        
         if (val) {
             todos[key] = { text: val, min: finalMin };
         } else {
@@ -590,34 +731,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupVerticalWheel(el, onSelect) {
-        const update = () => {
-            const center = el.scrollTop + el.offsetHeight / 2;
-            let closest = null; let minDiff = Infinity;
-            Array.from(el.children).forEach(c => {
-                const cCenter = c.offsetTop + c.offsetHeight / 2;
-                const dist = center - cCenter; const absDist = Math.abs(dist);
-                const scale = Math.max(0.85, 1 - absDist/800);
-                const opacity = Math.max(0.3, 1 - absDist/150);
-                c.style.transform = `scale(${scale})`;
-                c.style.opacity = opacity;
-                if(absDist < 25) c.classList.add('selected-visual');
-                else c.classList.remove('selected-visual');
-                if(absDist < minDiff) { minDiff = absDist; closest = c; }
-            });
-            return closest;
-        };
+        let timer;
         el.addEventListener('scroll', () => {
-            requestAnimationFrame(update);
-            clearTimeout(el.timer);
-            el.timer = setTimeout(() => {
-                const sel = update();
+            requestAnimationFrame(() => updateWheelVisuals(el));
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const sel = getCenterItem(el);
                 if(sel && onSelect) {
                     sel.scrollIntoView({behavior:'smooth', block:'center'});
                     onSelect(sel.dataset.value || sel.dataset.val);
                 }
             }, 100);
         });
-        setTimeout(update, 100);
+        setTimeout(() => updateWheelVisuals(el), 100);
     }
 
     window.openUserModal = () => {
